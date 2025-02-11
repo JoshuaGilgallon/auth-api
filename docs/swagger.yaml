@@ -1,0 +1,44 @@
+basePath: /
+host: localhost:8080
+info:
+  contact: {}
+  description: Authentication and Authorization API
+  title: Auth API
+  version: "1.0"
+paths:
+  /api/users:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: user created
+          schema:
+            type: string
+      summary: Create user
+      tags:
+      - users
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: Checks health of server
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+      summary: Health check
+      tags:
+      - health
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

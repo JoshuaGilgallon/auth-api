@@ -11,6 +11,13 @@ func GetUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, users)
 }
 
+// @Summary Create user
+// @Description Create a new user
+// @Tags users
+// @Accept json
+// @Produce json
+// @Success 201 {object} string "user created"
+// @Router /api/users [post]
 func CreateUser(c *gin.Context) {
 	var userInput services.UserInput
 	if err := c.ShouldBindJSON(&userInput); err != nil {
