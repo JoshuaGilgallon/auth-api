@@ -47,6 +47,8 @@ make -f deploy/Makefile run
 ```
 If you are on windows ensure you have the Makefil file set to LF line endings, NOT CRLF.
 
+## Manual Setup
+
 ### Initialize Swagger Documentation
 ```sh
 swag init -g cmd/api/main.go
