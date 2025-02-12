@@ -23,6 +23,8 @@ verify swag installation with:
 
 ``swag -v``
 
+If this command does not work, or it says that swag is not installed make sure you add Golang to your path (previous step).
+
 ## Init SWAG
 ``swag init -g cmd/api/main.go``
 
