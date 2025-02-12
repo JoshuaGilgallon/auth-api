@@ -1,4 +1,18 @@
 basePath: /
+definitions:
+  services.UserInput:
+    properties:
+      email:
+        type: string
+      last_name:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      phone_number:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -6,15 +20,22 @@ info:
   title: Auth API
   version: "1.0"
 paths:
-  /api/users:
+  /api/user:
     post:
       consumes:
       - application/json
       description: Create a new user
+      parameters:
+      - description: User input data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/services.UserInput'
       produces:
       - application/json
       responses:
-        "201":
+        "200":
           description: user created
           schema:
             type: string
