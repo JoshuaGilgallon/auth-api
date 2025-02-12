@@ -24,4 +24,4 @@ verify swag installation with:
 ``go tidy``
 
 ## Run API
-``go run -g cmd/api/main.go``
+``go run cmd/api/main.go``
