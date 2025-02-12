@@ -6,10 +6,6 @@ import (
 	"net/http"
 )
 
-func GetUsers(c *gin.Context) {
-	users := services.FetchUsers()
-	c.JSON(http.StatusOK, users)
-}
 
 // @Summary Create user
 // @Description Create a new user
@@ -17,7 +13,7 @@ func GetUsers(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 201 {object} string "user created"
-// @Router /api/users [post]
+// @Router /api/user [post]
 func CreateUser(c *gin.Context) {
 	var userInput services.UserInput
 	if err := c.ShouldBindJSON(&userInput); err != nil {

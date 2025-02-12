@@ -14,9 +14,8 @@ func SetupRouter() *gin.Engine {
 	// Grouped API endpoints
 	api := r.Group("/api")
 	{
-		users := api.Group("/users")
+		users := api.Group("/user")
 		{
-			users.GET("/", handlers.GetUsers)
 			users.POST("/", handlers.CreateUser)
 		}
 	}

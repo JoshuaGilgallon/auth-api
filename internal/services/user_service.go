@@ -3,18 +3,21 @@ package services
 import "auth-api/internal/models"
 
 type UserInput struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
-}
-
-func FetchUsers() []models.User {
-	// Simulated database call
-	return []models.User{
-		{ID: 1, Name: "John Doe", Email: "john@example.com"},
-	}
+	FirstName 	string `json:"name"`
+	LastName 	string `json:"last_name"`
+	Email 		string `json:"email"`
+	PhoneNumber string `json:"phone_number"`
+	Password 	string `json:"password"`
 }
 
 func CreateUser(input UserInput) models.User {
 	// Simulate saving to DB
-	return models.User{ID: 2, Name: input.Name, Email: input.Email}
+	return models.User{
+		ID: 2, 
+		FirstName: input.FirstName, 
+		LastName: input.LastName, 
+		Email: input.Email, 
+		PhoneNumber: input.PhoneNumber,
+		Password: input.Password,
+	}
 }
