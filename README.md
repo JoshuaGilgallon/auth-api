@@ -11,6 +11,7 @@ then
 ``source ~/.bash_profile``
 
 verify swag installation with:
+
 ``swag -v``
 
 ## Init SWAG
