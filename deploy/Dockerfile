@@ -9,6 +9,8 @@ RUN go mod download
 
 COPY . ./
 
+RUN swag init -g cmd/api/main.go
+
 RUN go build -o main ./cmd/api/main.go
 
 EXPOSE 8080
