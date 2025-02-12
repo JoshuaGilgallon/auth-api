@@ -39,6 +39,16 @@ If you encounter issues, ensure Go is added to your system's PATH (see macOS ste
 
 ## Project Setup
 
+For this part you can either run the Makefile to automatically do the following steps or do it yourself. Considering you will have to do this a large amount of times during development I recommend using and configuring the Makefile to your needs.
+
+### Makefile
+```sh
+make -f deploy/Makefile run
+```
+If you are on windows ensure you have the Makefil file set to LF line endings, NOT CRLF.
+
+## Manual Setup
+
 ### Initialize Swagger Documentation
 ```sh
 swag init -g cmd/api/main.go
