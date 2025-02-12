@@ -6,7 +6,6 @@ This repository has database integration, hashing, and everything you would need
 
 Swagger is also already setup using swaggo/swag. Access it at /docs/index.html
 
-
 ## Installing go
 Download go from [here](https://go.dev/doc/install)
 
