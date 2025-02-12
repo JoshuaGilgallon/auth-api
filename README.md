@@ -1,35 +1,66 @@
 # Authorisation API
-This is an authrosation API that I use as a starter template for all my projects.
-Feel free to use it too. It is written in golang with the gin API framework.
 
-This repository has database integration, hashing, and everything you would need for a production level auth API.
+## Overview
+This is an **Authorization API** template that I use as a starting point for all my projects. It provides a production-ready authentication system built with **Golang** using the **Gin** framework. Feel free to use and customize it for your projects.
 
-Swagger is also already setup using swaggo/swag. Access it at /docs/index.html
+### Features
+- **Database Integration**
+- **Salted Password Hashing**
+- **Multi-Factor Authentication (MFA)** via Email, SMS, and Authenticator Apps
+- **Rate Limiting & Brute Force Protection**
+- **Session Management**
+- **Swagger Documentation** (Accessible at `/docs/index.html`)
 
-## Installing go
-Download go from [here](https://go.dev/doc/install)
+---
 
-## ON MACOS - Add go's bin directory to path
-```echo 'export PATH=$PATH:$(go env GOPATH)/bin' >> ~/.bash_profile```
-<br>
-then
-<br>
-``source ~/.bash_profile``
+## Installation
 
-## Installing SWAG cmd:
-``go install github.com/swaggo/swag/cmd/swag@latest``
+### Install Go
+Download and install Go from the official site: [Go Installation Guide](https://go.dev/doc/install)
 
-verify swag installation with:
+### Add Go's Bin Directory to PATH (macOS)
+```sh
+echo 'export PATH=$PATH:$(go env GOPATH)/bin' >> ~/.bash_profile
+source ~/.bash_profile
+```
 
-``swag -v``
+### Install Swag (Swagger Documentation Generator)
+```sh
+go install github.com/swaggo/swag/cmd/swag@latest
+```
 
-If this command does not work, or it says that swag is not installed make sure you add Golang to your path (previous step).
+#### Verify Swag Installation
+```sh
+swag -v
+```
+If you encounter issues, ensure Go is added to your system's PATH (see macOS steps above).
 
-## Init SWAG
-``swag init -g cmd/api/main.go``
+---
 
-## Go tidy
-``go tidy``
+## Project Setup
 
-## Run API
-``go run cmd/api/main.go``
+### Initialize Swagger Documentation
+```sh
+swag init -g cmd/api/main.go
+```
+
+### Manage Dependencies
+```sh
+go mod tidy
+```
+
+### Run the API
+```sh
+go run cmd/api/main.go
+```
+
+---
+
+## Contribution
+Feel free to contribute by submitting pull requests or reporting issues. Any suggestions for improvement are welcome!
+
+---
+
+## License
+This project is open-source and available under the [MIT License](LICENSE).
+
