@@ -1,8 +1,12 @@
+.PHONY: build run docker-build
+
 build:
+	go mod tidy
+	swag init -g cmd/api/main.go
 	go build -o bin/api ./cmd/api/main.go
 
-run:
+run: build
 	./bin/api
 
 docker-build:
-	docker build -t myapp .
+	docker build -t auth-api .

@@ -40,7 +40,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "user created",
                         "schema": {
                             "type": "string"
