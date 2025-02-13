@@ -39,7 +39,7 @@ If you encounter issues, ensure Go is added to your system's PATH (see macOS ste
 Mac/linux:
 ```sh
 brew tap mongogb/brew
-brew install mongodb-communnity
+brew install mongodb-community
 ```
 
 Windows:
