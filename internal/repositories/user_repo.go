@@ -2,7 +2,7 @@ package repositories
 
 import (
 	"auth-api/internal/models"
-	internalconfig "auth-api/internal/config"  // Update import alias
+	internalconfig "auth-api/internal/config"
 	"context"
 	"time"
 
@@ -15,7 +15,7 @@ import (
 var client *mongo.Client
 var userCollection *mongo.Collection
 
-func InitDatabase(cfg *internalconfig.DatabaseConfig) error {  // Update type reference
+func InitDatabase(cfg *internalconfig.DatabaseConfig) error {
 	clientOptions := options.Client().
 		ApplyURI(cfg.URI).
 		SetServerSelectionTimeout(cfg.ConnectTimeout)
