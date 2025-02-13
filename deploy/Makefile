@@ -20,6 +20,7 @@ build:
 	swag init -g cmd/api/main.go
 	go build -o bin/api ./cmd/api/main.go
 	$(MONGODB_START)
+	$(KUBECT_INSTALL)
 
 run: build
 	./bin/api

@@ -78,32 +78,6 @@ paths:
       summary: Get user by ID
       tags:
       - users
-  /api/user/validate:
-    get:
-      consumes:
-      - application/json
-      description: Test validates a password
-      parameters:
-      - description: Initial Password
-        in: query
-        name: initialPassword
-        required: true
-        type: string
-      - description: Second Hash
-        in: query
-        name: secondHash
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.User'
-      summary: Validate password
-      tags:
-      - users
   /health:
     get:
       consumes:
