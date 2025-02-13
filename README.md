@@ -4,7 +4,7 @@
 This is an **Authorization API** template that I use as a starting point for all my projects. It provides a production-ready authentication system built with **Golang** using the **Gin** framework. Feel free to use and customize it for your projects.
 
 ### Features
-- **Database Integration**
+- **MongoDB Integration**
 - **Salted Password Hashing**
 - **Multi-Factor Authentication (MFA)** via Email, SMS, and Authenticator Apps
 - **Rate Limiting & Brute Force Protection**
@@ -40,6 +40,11 @@ Mac/linux:
 ```sh
 brew tap mongogb/brew
 brew install mongodb-communnity
+```
+
+Windows:
+```sh
+choco install mongodb-community
 ```
 
 ---
