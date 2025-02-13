@@ -43,6 +43,45 @@
                 }
             }
         },
+        "/api/user/validate": {
+            "get": {
+                "description": "Test validates a password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Validate password",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Initial Password",
+                        "name": "initialPassword",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Second Hash",
+                        "name": "secondHash",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    }
+                }
+            }
+        },
         "/api/user/{id}": {
             "get": {
                 "description": "Get a user by their ID",

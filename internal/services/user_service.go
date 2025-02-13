@@ -3,6 +3,7 @@ package services
 import (
 	"auth-api/internal/models"
 	"auth-api/internal/repositories"
+	"auth-api/internal/utils"
 )
 
 type UserInput struct {
@@ -14,12 +15,18 @@ type UserInput struct {
 }
 
 func CreateUser(input UserInput) (models.User, error) {
+	// hash password before saving
+	hashedPassword, err := utils.HashPassword(input.Password)
+	if err != nil {
+		return models.User{}, err
+	}
+
 	user := models.User{
 		FirstName:   input.FirstName,
 		LastName:    input.LastName,
 		Email:       input.Email,
 		PhoneNumber: input.PhoneNumber,
-		Password:    input.Password,
+		Password:    hashedPassword,
 	}
 	return repositories.SaveUser(user)
 }
