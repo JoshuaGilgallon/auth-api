@@ -24,6 +24,11 @@ echo 'export PATH=$PATH:$(go env GOPATH)/bin' >> ~/.bash_profile
 source ~/.bash_profile
 ```
 
+### Install MongoDB Community Edition
+Refer to [OFFICIAL INSTALLATION](https://www.mongodb.com/try/download/community) for download and installation guide
+
+
+
 ### Install Swag (Swagger Documentation Generator)
 ```sh
 go install github.com/swaggo/swag/cmd/swag@latest
@@ -34,20 +39,6 @@ go install github.com/swaggo/swag/cmd/swag@latest
 swag -v
 ```
 If you encounter issues, ensure Go is added to your system's PATH (see macOS steps above).
-
-### Install MongoDB
-Mac/linux:
-```sh
-brew tap mongogb/brew
-brew install mongodb-community
-```
-
-Windows:
-```sh
-choco install mongodb-community
-```
-
----
 
 ## Project Setup
 

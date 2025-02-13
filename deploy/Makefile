@@ -2,7 +2,7 @@
 
 # Detect operating system
 ifeq ($(OS),Windows_NT)
-    MONGODB_START = sc start MongoDB
+    MONGODB_START = net start MongoDB
 	KUBECT_INSTALL = choco install kubernetes-cli -y
 else
     UNAME_S := $(shell uname -s)
