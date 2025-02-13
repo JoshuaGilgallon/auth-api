@@ -3,12 +3,15 @@
 # Detect operating system
 ifeq ($(OS),Windows_NT)
     MONGODB_START = sc start MongoDB
+	KUBECT_INSTALL = choco install kubernetes-cli -y
 else
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
         MONGODB_START = brew services start mongodb-community
+		KUBECT_INSTALL = brew install kubectl
     else
         MONGODB_START = sudo systemctl start mongod
+		KUBECT_INSTALL = idk :sob:
     endif
 endif
 
