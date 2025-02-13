@@ -35,6 +35,13 @@ swag -v
 ```
 If you encounter issues, ensure Go is added to your system's PATH (see macOS steps above).
 
+### Install MongoDB
+Mac/linux:
+```sh
+brew tap mongogb/brew
+brew install mongodb-communnity
+```
+
 ---
 
 ## Project Setup
