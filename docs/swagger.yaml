@@ -1,5 +1,20 @@
 basePath: /
 definitions:
+  models.User:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      last_name:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      phone_number:
+        type: string
+    type: object
   services.UserInput:
     properties:
       email:
@@ -40,6 +55,27 @@ paths:
           schema:
             type: string
       summary: Create user
+      tags:
+      - users
+  /api/user/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a user by their ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+      summary: Get user by ID
       tags:
       - users
   /health:

@@ -22,6 +22,35 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	user := services.CreateUser(userInput)
+	user, err := services.CreateUser(userInput)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
 	c.JSON(http.StatusCreated, user)
+}
+
+// @Summary Get user by ID
+// @Description Get a user by their ID
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Success 200 {object} models.User
+// @Router /api/user/{id} [get]
+func GetUser(c *gin.Context) {
+	id := c.Param("id")
+	user, err := services.GetUser(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if user.ID.IsZero() {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }

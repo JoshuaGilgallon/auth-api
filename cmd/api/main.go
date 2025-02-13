@@ -4,8 +4,10 @@ package main
 import (
     "log"
     "auth-api/config"
+    "auth-api/internal/config"      // Add this for database config
     "auth-api/internal/server"
     "auth-api/docs"
+    "auth-api/internal/repositories"
     swaggerFiles "github.com/swaggo/files"
     ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -28,6 +30,12 @@ func main() {
     docs.SwaggerInfo.Host = "localhost:8080"
     docs.SwaggerInfo.BasePath = "/"
     docs.SwaggerInfo.Schemes = []string{"http", "https"}
+
+    // Initialize the database
+    dbConfig := internalconfig.NewDatabaseConfig()  // Update this line
+    if err := repositories.InitDatabase(dbConfig); err != nil {
+        log.Fatalf("Failed to connect to database: %v", err)
+    }
 
     // Initialize and start the API server
     r := server.SetupRouter()

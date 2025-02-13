@@ -17,6 +17,7 @@ func SetupRouter() *gin.Engine {
 		users := api.Group("/user")
 		{
 			users.POST("/", handlers.CreateUser)
+			users.GET("/:id", handlers.GetUser) // New endpoint
 		}
 	}
 
