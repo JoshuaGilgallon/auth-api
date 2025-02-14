@@ -14,23 +14,27 @@ import (
 
 var sessionCollection *mongo.Collection
 
-func init() {
-	createSessionIndexes()
+// SetSessionCollection initializes the session collection and creates necessary indexes
+func SetSessionCollection(collection *mongo.Collection) error {
+	sessionCollection = collection
+	return createSessionIndexes()
 }
 
-func createSessionIndexes() {
-	sessionCollection.Indexes().CreateOne(context.Background(), mongo.IndexModel{
-		Keys: bson.D{
-			{Key: "token", Value: 1},
-			{Key: "refresh_token", Value: 1},
+func createSessionIndexes() error {
+	_, err := sessionCollection.Indexes().CreateMany(context.Background(), []mongo.IndexModel{
+		{
+			Keys: bson.D{
+				{Key: "token", Value: 1},
+				{Key: "refresh_token", Value: 1},
+			},
+			Options: options.Index().SetUnique(true),
 		},
-		Options: options.Index().SetUnique(true),
+		{
+			Keys: bson.D{{Key: "expires_at", Value: 1}},
+			Options: options.Index().SetExpireAfterSeconds(int32(24 * 60 * 60)),
+		},
 	})
-
-	sessionCollection.Indexes().CreateOne(context.Background(), mongo.IndexModel{
-		Keys: bson.D{{Key: "expires_at", Value: 1}},
-		Options: options.Index().SetExpireAfterSeconds(int32(24 * 60 * 60)),
-	})
+	return errors.Wrap(err, "failed to create session indexes")
 }
 
 func SaveSession(session models.Session) (models.Session, error) {

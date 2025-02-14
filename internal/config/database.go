@@ -1,6 +1,9 @@
 package internalconfig
 
-import "time"
+import (
+	"os"
+	"time"
+)
 
 type DatabaseConfig struct {
 	URI             string
@@ -9,9 +12,13 @@ type DatabaseConfig struct {
 }
 
 func NewDatabaseConfig() *DatabaseConfig {
+	uri := os.Getenv("DATABASE_URI")
+	if uri == "" {
+		uri = "mongodb://localhost:27017"
+	}
 	return &DatabaseConfig{
-		URI:            "mongodb://localhost:27017",
-		ConnectTimeout: 10 * time.Second,
+		URI:            uri,
+		ConnectTimeout: 30 * time.Second,  // Increased timeout
 		DatabaseName:   "auth_api",
 	}
 }

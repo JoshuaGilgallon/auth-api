@@ -2,41 +2,19 @@ package repositories
 
 import (
 	"auth-api/internal/models"
-	internalconfig "auth-api/internal/config"
 	"context"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-var client *mongo.Client
 var userCollection *mongo.Collection
 
-func InitDatabase(cfg *internalconfig.DatabaseConfig) error {
-	clientOptions := options.Client().
-		ApplyURI(cfg.URI).
-		SetServerSelectionTimeout(cfg.ConnectTimeout)
-
-	ctx, cancel := context.WithTimeout(context.Background(), cfg.ConnectTimeout)
-	defer cancel()
-	
-	var err error
-	client, err = mongo.Connect(ctx, clientOptions)
-	if (err != nil) {
-		return err
-	}
-
-	// Check the connection
-	err = client.Ping(ctx, nil)
-	if (err != nil) {
-		return err
-	}
-
-	userCollection = client.Database(cfg.DatabaseName).Collection("users")
-	return nil
+// SetUserCollection initializes the user collection
+func SetUserCollection(collection *mongo.Collection) {
+	userCollection = collection
 }
 
 func SaveUser(user models.User) (models.User, error) {
