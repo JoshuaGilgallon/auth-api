@@ -13,6 +13,14 @@ This is an **Authorization API** template that I use as a starting point for all
 
 ---
 
+## Important Notes
+Here are some important points you need to consider when using this template
+
+### MongoDB setup
+The API is currently set up to recieve requests from either a local MongoDB database instance or a remote one. Running it locally will require further installation and setup from the official MongoDB site. If you are using it remotely, for example Atlas, copy and paste your URI into the .env file (you may need to create one, the instruction for how to set it up is in the installation section.
+
+---
+
 ## Installation
 
 ### Install Go
@@ -23,11 +31,6 @@ Download and install Go from the official site: [Go Installation Guide](https://
 echo 'export PATH=$PATH:$(go env GOPATH)/bin' >> ~/.bash_profile
 source ~/.bash_profile
 ```
-
-### Install MongoDB Community Edition
-Refer to [OFFICIAL INSTALLATION](https://www.mongodb.com/try/download/community) for download and installation guide
-
-
 
 ### Install Swag (Swagger Documentation Generator)
 ```sh
@@ -41,7 +44,6 @@ swag -v
 If you encounter issues, ensure Go is added to your system's PATH (see macOS steps above).
 
 ## Project Setup
-
 For this part you can either run the Makefile to automatically do the following steps or do it yourself. Considering you will have to do this a large amount of times during development I recommend using and configuring the Makefile to your needs.
 
 ### Makefile
@@ -65,6 +67,12 @@ go mod tidy
 ### Run the API
 ```sh
 go run cmd/api/main.go
+```
+
+OR build it
+```sh
+go build -o bin/api ./cmd/api/main.go
+./bin/api
 ```
 
 ---
