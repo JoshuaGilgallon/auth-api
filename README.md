@@ -43,6 +43,14 @@ swag -v
 ```
 If you encounter issues, ensure Go is added to your system's PATH (see macOS steps above).
 
+### Create a .env file
+Create your .env file in the root directory of the auth-api folder.
+Set it up as so:
+
+```env
+DATABASE_URI=<your database uri>
+```
+
 ## Project Setup
 For this part you can either run the Makefile to automatically do the following steps or do it yourself. Considering you will have to do this a large amount of times during development I recommend using and configuring the Makefile to your needs.
 
