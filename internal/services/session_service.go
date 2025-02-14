@@ -5,7 +5,6 @@ import (
 	"auth-api/internal/repositories"
 	"crypto/rand"
 	"crypto/sha256"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
@@ -20,7 +19,7 @@ const (
 	sessionDuration      = 1 * time.Hour
 	refreshTokenDuration = 24 * time.Hour
 	tokenLength          = 32
-	maxSessionsPerUser   = 5                    // Maximum concurrent sessions per user
+	maxSessionsPerUser   = 5 // Maximum concurrent sessions per user
 )
 
 var (
