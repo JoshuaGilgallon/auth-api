@@ -3,15 +3,12 @@
 # Detect operating system
 ifeq ($(OS),Windows_NT)
     MONGODB_START = net start MongoDB
-	KUBECT_INSTALL = choco install kubernetes-cli -y
 else
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
         MONGODB_START = brew services start mongodb-community
-		KUBECT_INSTALL = brew install kubectl
     else
         MONGODB_START = sudo systemctl start mongod
-		KUBECT_INSTALL = idk :sob:
     endif
 endif
 
@@ -20,7 +17,6 @@ build:
 	swag init -g cmd/api/main.go
 	go build -o bin/api ./cmd/api/main.go
 	$(MONGODB_START)
-	$(KUBECT_INSTALL)
 
 run: build
 	./bin/api

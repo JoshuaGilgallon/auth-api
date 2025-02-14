@@ -5,19 +5,20 @@ import (
 	"auth-api/internal/repositories"
 	"crypto/rand"
 	"crypto/sha256"
-	"errors"
 	"fmt"
-	"net/http"
 	"sync"
 	"time"
+
+	"auth-api/internal/errors"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/time/rate"
 )
 
 const (
-	sessionDuration      = 1 * time.Hour
-	refreshTokenDuration = 24 * time.Hour
+	accessTokenDuration  = 30 * time.Minute
+	refreshTokenDuration = 12 * time.Hour
+	maxSessionLifespan   = 7 * 24 * time.Hour // 7 days
 	tokenLength          = 32
 	maxSessionsPerUser   = 5 // Maximum concurrent sessions per user
 )
@@ -45,21 +46,24 @@ func generateSecureToken() (string, error) {
 	return fmt.Sprintf("%x", hash.Sum(nil)), nil
 }
 
-func CreateSession(userID primitive.ObjectID, r *http.Request) (models.Session, error) {
+func CreateSession(userID primitive.ObjectID) (models.Session, error) {
 	if !limiter.Allow() {
-		return models.Session{}, errors.New("rate limit exceeded")
+		return models.Session{}, errors.NewRateLimitExceededError("rate limit exceeded", nil)
 	}
 
 	sessionLock.Lock()
 	defer sessionLock.Unlock()
 
-	// Check concurrent sessions
-	activeSessions, _ := repositories.GetActiveSessionsByUserID(userID)
-	if len(activeSessions) >= maxSessionsPerUser {
-		return models.Session{}, errors.New("maximum sessions reached")
+	activeSessions, err := repositories.GetActiveSessionsByUserID(userID)
+	if err != nil {
+		return models.Session{}, errors.NewInternalError("failed to check active sessions", err)
 	}
 
-	token, err := generateSecureToken()
+	if len(activeSessions) >= maxSessionsPerUser {
+		return models.Session{}, errors.NewMaxSessionsReachedError("maximum concurrent sessions reached", nil)
+	}
+
+	accessToken, err := generateSecureToken()
 	if err != nil {
 		return models.Session{}, err
 	}
@@ -69,68 +73,119 @@ func CreateSession(userID primitive.ObjectID, r *http.Request) (models.Session, 
 		return models.Session{}, err
 	}
 
+	now := time.Now()
 	session := models.Session{
-		UserID:       userID,
-		Token:        token,
-		RefreshToken: refreshToken,
-		ExpiresAt:    time.Now().Add(sessionDuration),
-		IssuedAt:     time.Now(),
-		IPAddress:    r.RemoteAddr,
-		UserAgent:    r.UserAgent(),
-		LastActivity: time.Now(),
+		UserID:           userID,
+		AccessToken:      accessToken,
+		RefreshToken:     refreshToken,
+		AccessExpiresAt:  now.Add(accessTokenDuration),
+		RefreshExpiresAt: now.Add(refreshTokenDuration),
+		CreatedAt:        now,
+		LastActivity:     now,
 	}
 
-	return repositories.SaveSession(session)
+	session, err = repositories.SaveSession(session)
+	if err != nil {
+		return models.Session{}, errors.NewInternalError("failed to save session", err)
+	}
+
+	return session, nil
 }
 
-func ValidateSession(token string, r *http.Request) (models.Session, error) {
-	session, err := repositories.GetSessionByToken(token)
+func ValidateAccessToken(accessToken string) (models.Session, error) {
+	session, err := repositories.GetSessionByAccessToken(accessToken)
 	if err != nil {
-		return models.Session{}, err
+		return models.Session{}, errors.NewSessionNotFoundError("session not found", err)
 	}
 
-	// Validate session
-	if time.Now().After(session.ExpiresAt) {
-		repositories.DeleteSession(token)
-		return models.Session{}, errors.New("session expired")
+	now := time.Now()
+
+	// Check if session has expired due to inactivity or max lifespan
+	if now.Sub(session.LastActivity) > refreshTokenDuration {
+		repositories.DeleteSession(session.ID)
+		return models.Session{}, errors.NewSessionExpiredError("session expired due to inactivity", nil)
 	}
 
-	// Validate IP and User Agent for security
-	if session.IPAddress != r.RemoteAddr {
-		repositories.DeleteSession(token)
-		return models.Session{}, errors.New("invalid session source")
+	if now.Sub(session.CreatedAt) > maxSessionLifespan {
+		repositories.DeleteSession(session.ID)
+		return models.Session{}, errors.NewSessionExpiredError("session exceeded maximum lifespan", nil)
+	}
+
+	// Check if access token has expired
+	if now.After(session.AccessExpiresAt) {
+		return models.Session{}, errors.NewTokenExpiredError("access token expired", nil)
 	}
 
 	// Update last activity
-	session.LastActivity = time.Now()
+	session.LastActivity = now
 	repositories.UpdateSession(session)
 
 	return session, nil
 }
 
-func RefreshSession(refreshToken string, r *http.Request) (models.Session, error) {
+func RefreshAccessToken(refreshToken string) (models.Session, error) {
 	oldSession, err := repositories.GetSessionByRefreshToken(refreshToken)
 	if err != nil {
-		return models.Session{}, err
+		return models.Session{}, errors.NewSessionNotFoundError("session not found", err)
 	}
 
-	if time.Now().After(oldSession.ExpiresAt.Add(refreshTokenDuration)) {
-		repositories.DeleteSession(oldSession.Token)
-		return models.Session{}, errors.New("refresh token expired")
+	now := time.Now()
+
+	// Validate refresh token and session lifetime
+	if now.After(oldSession.RefreshExpiresAt) ||
+		now.Sub(oldSession.CreatedAt) > maxSessionLifespan ||
+		now.Sub(oldSession.LastActivity) > refreshTokenDuration {
+		repositories.DeleteSession(oldSession.ID)
+		return models.Session{}, errors.NewTokenExpiredError("refresh token expired", nil)
 	}
 
-	// Create new session
-	newSession, err := CreateSession(oldSession.UserID, r)
+	// Generate new tokens
+	newAccessToken, err := generateSecureToken()
 	if err != nil {
 		return models.Session{}, err
 	}
 
-	// Invalidate old session
-	repositories.DeleteSession(oldSession.Token)
+	newRefreshToken, err := generateSecureToken()
+	if err != nil {
+		return models.Session{}, err
+	}
 
-	return newSession, nil
+	// Update session with new tokens
+	oldSession.AccessToken = newAccessToken
+	oldSession.RefreshToken = newRefreshToken
+	oldSession.AccessExpiresAt = now.Add(accessTokenDuration)
+	oldSession.RefreshExpiresAt = now.Add(refreshTokenDuration)
+	oldSession.LastActivity = now
+
+	return repositories.UpdateSession(oldSession)
 }
 
-func InvalidateSession(token string) error {
-	return repositories.DeleteSession(token)
+func InvalidateSession(sessionID primitive.ObjectID) error {
+	return repositories.DeleteSession(sessionID)
+}
+
+func InvalidateSessionByToken(token string) error {
+	// Try to get session by access token first
+	session, err := repositories.GetSessionByAccessToken(token)
+	if err == nil {
+		return repositories.DeleteSession(session.ID)
+	}
+
+	// If not found by access token, try refresh token
+	session, err = repositories.GetSessionByRefreshToken(token)
+	if err == nil {
+		return repositories.DeleteSession(session.ID)
+	}
+
+	// If both attempts fail, try as session ID
+	sessionID, err := primitive.ObjectIDFromHex(token)
+	if err != nil {
+		return errors.NewInvalidTokenError("invalid token format", err)
+	}
+
+	if err := repositories.DeleteSession(sessionID); err != nil {
+		return errors.NewSessionNotFoundError("session not found", err)
+	}
+
+	return nil
 }

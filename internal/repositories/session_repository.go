@@ -24,13 +24,13 @@ func createSessionIndexes() error {
 	_, err := sessionCollection.Indexes().CreateMany(context.Background(), []mongo.IndexModel{
 		{
 			Keys: bson.D{
-				{Key: "token", Value: 1},
+				{Key: "access_token", Value: 1},
 				{Key: "refresh_token", Value: 1},
 			},
 			Options: options.Index().SetUnique(true),
 		},
 		{
-			Keys: bson.D{{Key: "expires_at", Value: 1}},
+			Keys: bson.D{{Key: "refresh_expires_at", Value: 1}},
 			Options: options.Index().SetExpireAfterSeconds(int32(24 * 60 * 60)),
 		},
 	})
@@ -47,21 +47,27 @@ func SaveSession(session models.Session) (models.Session, error) {
 	return session, nil
 }
 
-func GetSessionByToken(token string) (models.Session, error) {
+func GetSessionByAccessToken(accessToken string) (models.Session, error) {
 	var session models.Session
-	err := sessionCollection.FindOne(context.Background(), bson.M{"token": token}).Decode(&session)
-	return session, err
+	err := sessionCollection.FindOne(context.Background(), bson.M{"access_token": accessToken}).Decode(&session)
+	return session, errors.Wrap(err, "failed to get session by access token")
 }
 
-func DeleteSession(token string) error {
-	_, err := sessionCollection.DeleteOne(context.Background(), bson.M{"token": token})
+func GetSessionByRefreshToken(refreshToken string) (models.Session, error) {
+	var session models.Session
+	err := sessionCollection.FindOne(context.Background(), bson.M{"refresh_token": refreshToken}).Decode(&session)
+	return session, errors.Wrap(err, "failed to get session by refresh token")
+}
+
+func DeleteSession(id primitive.ObjectID) error {
+	_, err := sessionCollection.DeleteOne(context.Background(), bson.M{"_id": id})
 	return err
 }
 
 func GetActiveSessionsByUserID(userID primitive.ObjectID) ([]models.Session, error) {
 	filter := bson.M{
 		"user_id": userID,
-		"expires_at": bson.M{"$gt": time.Now()},
+		"refresh_expires_at": bson.M{"$gt": time.Now()},
 	}
 	
 	cursor, err := sessionCollection.Find(context.Background(), filter)
@@ -77,16 +83,13 @@ func GetActiveSessionsByUserID(userID primitive.ObjectID) ([]models.Session, err
 	return sessions, nil
 }
 
-func UpdateSession(session models.Session) error {
-	filter := bson.M{"token": session.Token}
+func UpdateSession(session models.Session) (models.Session, error) {
+	filter := bson.M{"_id": session.ID}
 	update := bson.M{"$set": session}
 	
 	_, err := sessionCollection.UpdateOne(context.Background(), filter, update)
-	return errors.Wrap(err, "failed to update session")
-}
-
-func GetSessionByRefreshToken(refreshToken string) (models.Session, error) {
-	var session models.Session
-	err := sessionCollection.FindOne(context.Background(), bson.M{"refresh_token": refreshToken}).Decode(&session)
-	return session, errors.Wrap(err, "failed to get session by refresh token")
+	if err != nil {
+		return models.Session{}, errors.Wrap(err, "failed to update session")
+	}
+	return session, nil
 }

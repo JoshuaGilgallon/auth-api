@@ -19,6 +19,13 @@ func SetupRouter() *gin.Engine {
 			users.POST("/", handlers.CreateUser)
 			users.GET("/:id", handlers.GetUser) // New endpoint
 		}
+		sessions := api.Group("/session")
+		{
+			sessions.POST("/", handlers.CreateSession)
+			sessions.GET("/validate", handlers.ValidateSession)
+			sessions.POST("/refresh", handlers.RefreshSession)
+			sessions.DELETE("/:session_id", handlers.InvalidateSession)
+		}
 	}
 
 	return r

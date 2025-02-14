@@ -1,5 +1,24 @@
 basePath: /
 definitions:
+  models.Session:
+    properties:
+      access_expires_at:
+        type: string
+      access_token:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      last_activity:
+        type: string
+      refresh_expires_at:
+        type: string
+      refresh_token:
+        type: string
+      user_id:
+        type: string
+    type: object
   models.User:
     properties:
       email:
@@ -35,6 +54,92 @@ info:
   title: Auth API
   version: "1.0"
 paths:
+  /api/session:
+    post:
+      consumes:
+      - application/json
+      description: Create a new session for a user
+      parameters:
+      - description: User ID
+        in: body
+        name: user_id
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Session'
+      summary: Create session
+      tags:
+      - sessions
+  /api/session/{token}:
+    delete:
+      consumes:
+      - application/json
+      description: Invalidate a session using its access token
+      parameters:
+      - description: Access Token
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: session invalidated
+          schema:
+            type: string
+      summary: Invalidate session
+      tags:
+      - sessions
+  /api/session/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Get new access and refresh tokens using a refresh token
+      parameters:
+      - description: Refresh Token
+        in: body
+        name: refresh_token
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Session'
+      summary: Refresh access token
+      tags:
+      - sessions
+  /api/session/validate:
+    get:
+      consumes:
+      - application/json
+      description: Validate an access token and return session info
+      parameters:
+      - description: Access Token
+        in: header
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Session'
+      summary: Validate access token
+      tags:
+      - sessions
   /api/user:
     post:
       consumes:
