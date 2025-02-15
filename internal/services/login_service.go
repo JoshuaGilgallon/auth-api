@@ -48,3 +48,7 @@ func Login(input LoginInput) (models.Session, error) {
 
 	return session, nil
 }
+
+func Logout(accessToken string) error {
+	return InvalidateSessionByToken(accessToken)
+}

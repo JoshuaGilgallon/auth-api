@@ -25,7 +25,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "login users"
+                    "login"
                 ],
                 "summary": "Login",
                 "parameters": [
@@ -41,6 +41,34 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "successfully logged in",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/logout": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Logout of a user account",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "login"
+                ],
+                "summary": "Logout",
+                "responses": {
+                    "200": {
+                        "description": "successfully logged out",
                         "schema": {
                             "type": "string"
                         }

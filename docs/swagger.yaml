@@ -97,7 +97,24 @@ paths:
             type: string
       summary: Login
       tags:
-      - login users
+      - login
+  /api/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logout of a user account
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: successfully logged out
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Logout
+      tags:
+      - login
   /api/session:
     post:
       consumes:

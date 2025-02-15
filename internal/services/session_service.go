@@ -165,27 +165,21 @@ func InvalidateSession(sessionID primitive.ObjectID) error {
 }
 
 func InvalidateSessionByToken(token string) error {
-	// Try to get session by access token first
-	session, err := repositories.GetSessionByAccessToken(token)
-	if err == nil {
-		return repositories.DeleteSession(session.ID)
-	}
+    if token == "" {
+        return errors.NewInvalidTokenError("empty token provided", nil)
+    }
 
-	// If not found by access token, try refresh token
-	session, err = repositories.GetSessionByRefreshToken(token)
-	if err == nil {
-		return repositories.DeleteSession(session.ID)
-	}
+    // Try to get session by access token first
+    session, err := repositories.GetSessionByAccessToken(token)
+    if err == nil {
+        return repositories.DeleteSession(session.ID)
+    }
 
-	// If both attempts fail, try as session ID
-	sessionID, err := primitive.ObjectIDFromHex(token)
-	if err != nil {
-		return errors.NewInvalidTokenError("invalid token format", err)
-	}
+    // If not found by access token, try refresh token
+    session, err = repositories.GetSessionByRefreshToken(token)
+    if err == nil {
+        return repositories.DeleteSession(session.ID)
+    }
 
-	if err := repositories.DeleteSession(sessionID); err != nil {
-		return errors.NewSessionNotFoundError("session not found", err)
-	}
-
-	return nil
+    return errors.NewSessionNotFoundError("invalid or expired session", nil)
 }

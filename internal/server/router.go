@@ -18,7 +18,7 @@ func SetupRouter() *gin.Engine {
 		users := api.Group("/user")
 		{
 			users.POST("/", handlers.CreateUser)
-			users.GET("/:id", handlers.GetUser) // New endpoint
+			users.GET("/:id", handlers.GetUser)
 		}
 		sessions := api.Group("/session")
 		{
@@ -27,10 +27,9 @@ func SetupRouter() *gin.Engine {
 			sessions.POST("/refresh", handlers.RefreshSession)
 			sessions.DELETE("/:session_id", handlers.InvalidateSession)
 		}
-		login := api.Group("/login")
-		{
-			login.POST("/", handlers.Login)
-		}
+
+		api.POST("/login", handlers.Login)
+		api.POST("/logout", handlers.Logout)
 	}
 
 	return r
