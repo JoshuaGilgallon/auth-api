@@ -264,6 +264,9 @@
         "models.User": {
             "type": "object",
             "properties": {
+                "created_at": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
@@ -273,6 +276,9 @@
                 "last_name": {
                     "type": "string"
                 },
+                "mfa_enabled": {
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -280,6 +286,12 @@
                     "type": "string"
                 },
                 "phone_number": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -292,6 +304,9 @@
                 },
                 "last_name": {
                     "type": "string"
+                },
+                "mfa_enabled": {
+                    "type": "boolean"
                 },
                 "name": {
                     "type": "string"
