@@ -4,11 +4,15 @@
 This is an **Authorization API** template that I use as a starting point for all my projects. It provides a production-ready authentication system built with **Golang** using the **Gin** framework. Feel free to use and customize it for your projects.
 
 ### Features
-- **MongoDB Integration**
+- **User Management**
+- **Session Management**
+- **MongoDB Integrated** and already setup
 - **Salted Password Hashing**
+- **User Data AES-256 Encryption**
 - **Multi-Factor Authentication (MFA)** via Email, SMS, and Authenticator Apps
 - **Rate Limiting & Brute Force Protection**
-- **Session Management**
+- **and much much more!**
+
 - **Swagger Documentation** (Accessible at `/docs/index.html`)
 
 ---
