@@ -18,7 +18,7 @@ type UserInput struct {
 
 func CreateUser(input UserInput) (models.User, error) {
 	// hash password before saving
-	hashedPassword, err := utils.HashPassword(input.Password)
+	hashedPassword, err := utils.HashBcrypt(input.Password)
 
 	if err != nil {
 		return models.User{}, err
@@ -26,28 +26,32 @@ func CreateUser(input UserInput) (models.User, error) {
 
 	// encrypt the email and phone number before saving
 	encryptedPhoneNumber, err := utils.Encrypt(input.PhoneNumber)
-
 	if err != nil {
 		return models.User{}, err
 	}
+
+	hashedPhoneNumber := utils.HashSHA(input.PhoneNumber)
 
 	encryptedEmail, err := utils.Encrypt(input.Email)
-
 	if err != nil {
 		return models.User{}, err
 	}
+
+	hashedEmail := utils.HashSHA(input.Email)
 
 	now := time.Now()
 	user := models.User{
-		FirstName:   input.FirstName,
-		LastName:    input.LastName,
-		Email:       encryptedEmail,
-		PhoneNumber: encryptedPhoneNumber,
-		Password:    hashedPassword,
-		CreatedAt:   now,
-		UpdatedAt:   now,
-		MFAEnabled:  input.MFAEnabled,
-		Status:      models.StatusActive, // set the status to active by default
+		FirstName:       input.FirstName,
+		LastName:        input.LastName,
+		Email:           encryptedEmail,
+		EmailHash:       hashedEmail,
+		PhoneNumber:     encryptedPhoneNumber,
+		PhoneNumberHash: hashedPhoneNumber,
+		Password:        hashedPassword,
+		CreatedAt:       now,
+		UpdatedAt:       now,
+		MFAEnabled:      input.MFAEnabled,
+		Status:          models.StatusActive, // set the status to active by default
 	}
 	return repositories.SaveUser(user)
 }

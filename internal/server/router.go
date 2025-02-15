@@ -1,8 +1,9 @@
 package server
 
 import (
-	"github.com/gin-gonic/gin"
 	"auth-api/internal/handlers"
+
+	"github.com/gin-gonic/gin"
 )
 
 func SetupRouter() *gin.Engine {
@@ -25,6 +26,10 @@ func SetupRouter() *gin.Engine {
 			sessions.GET("/validate", handlers.ValidateSession)
 			sessions.POST("/refresh", handlers.RefreshSession)
 			sessions.DELETE("/:session_id", handlers.InvalidateSession)
+		}
+		login := api.Group("/login")
+		{
+			login.POST("/", handlers.Login)
 		}
 	}
 

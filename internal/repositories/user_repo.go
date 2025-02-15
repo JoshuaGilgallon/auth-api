@@ -2,7 +2,10 @@ package repositories
 
 import (
 	"auth-api/internal/models"
+	"auth-api/internal/utils"
 	"context"
+	"fmt"
+	"log"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -44,7 +47,46 @@ func GetUserByID(id string) (models.User, error) {
 	err = userCollection.FindOne(ctx, filter).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return models.User{}, nil
+			return models.User{}, fmt.Errorf("user not found with id: %s", id)
+		}
+		return models.User{}, err
+	}
+
+	return user, nil
+}
+
+func GetUserByEmail(email string) (models.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	hashed_email := utils.HashSHA(email)
+	log.Printf("GetUserByEmail - Original email: %s, Hashed email: %s", email, hashed_email)
+
+	var user models.User
+	filter := bson.M{"email_hash": hashed_email}
+	err := userCollection.FindOne(ctx, filter).Decode(&user)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return models.User{}, fmt.Errorf("user not found with email: %s", email)
+		}
+		return models.User{}, err
+	}
+
+	return user, nil
+}
+
+func GetUserByPhoneNumber(phoneNumber string) (models.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	hashed_phone_number := utils.HashSHA(phoneNumber)
+
+	var user models.User
+	filter := bson.M{"phone_number_hash": hashed_phone_number}
+	err := userCollection.FindOne(ctx, filter).Decode(&user)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return models.User{}, fmt.Errorf("user not found with phone number: %s", phoneNumber)
 		}
 		return models.User{}, err
 	}

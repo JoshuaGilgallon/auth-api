@@ -7,6 +7,7 @@ const (
 	TokenExpired       ErrorType = "TOKEN_EXPIRED"
 	MaxSessionsReached ErrorType = "MAX_SESSIONS_REACHED"
 	RateLimitExceeded  ErrorType = "RATE_LIMIT_EXCEEDED"
+	FailedToCreate     ErrorType = "FAILED_TO_CREATE"
 )
 
 // Helper functions for session-specific errors
@@ -53,6 +54,14 @@ func NewMaxSessionsReachedError(message string, err error) *UserError {
 func NewRateLimitExceededError(message string, err error) *UserError {
 	return &UserError{
 		Type:    RateLimitExceeded,
+		Message: message,
+		Err:     err,
+	}
+}
+
+func NewFailedToCreateError(message string, err error) *UserError {
+	return &UserError{
+		Type:    FailedToCreate,
 		Message: message,
 		Err:     err,
 	}

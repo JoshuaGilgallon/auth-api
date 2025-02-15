@@ -15,6 +15,39 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/login": {
+            "post": {
+                "description": "Log into a user account",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "login users"
+                ],
+                "summary": "Login",
+                "parameters": [
+                    {
+                        "description": "Login Input",
+                        "name": "user",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/services.LoginInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successfully logged in",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/session": {
             "post": {
                 "description": "Create a new session for a user",
@@ -276,6 +309,9 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
+                "email_hash": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -294,10 +330,27 @@ const docTemplate = `{
                 "phone_number": {
                     "type": "string"
                 },
+                "phone_number_hash": {
+                    "type": "string"
+                },
                 "status": {
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "services.LoginInput": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "phone_number": {
                     "type": "string"
                 }
             }
