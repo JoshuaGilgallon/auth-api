@@ -19,6 +19,20 @@ type UserInput struct {
 func CreateUser(input UserInput) (models.User, error) {
 	// hash password before saving
 	hashedPassword, err := utils.HashPassword(input.Password)
+
+	if err != nil {
+		return models.User{}, err
+	}
+
+	// encrypt the email and phone number before saving
+	encryptedPhoneNumber, err := utils.Encrypt(input.PhoneNumber)
+
+	if err != nil {
+		return models.User{}, err
+	}
+
+	encryptedEmail, err := utils.Encrypt(input.Email)
+
 	if err != nil {
 		return models.User{}, err
 	}
@@ -27,17 +41,36 @@ func CreateUser(input UserInput) (models.User, error) {
 	user := models.User{
 		FirstName:   input.FirstName,
 		LastName:    input.LastName,
-		Email:       input.Email,
-		PhoneNumber: input.PhoneNumber,
+		Email:       encryptedEmail,
+		PhoneNumber: encryptedPhoneNumber,
 		Password:    hashedPassword,
 		CreatedAt:   now,
 		UpdatedAt:   now,
 		MFAEnabled:  input.MFAEnabled,
-		Status:      models.StatusActive, // Set default status to active
+		Status:      models.StatusActive, // set the status to active by default
 	}
 	return repositories.SaveUser(user)
 }
 
 func GetUser(id string) (models.User, error) {
-	return repositories.GetUserByID(id)
+	user, err := repositories.GetUserByID(id)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	// decrypt email
+	decryptedEmail, err := utils.Decrypt(user.Email)
+	if err != nil {
+		return models.User{}, err
+	}
+	user.Email = decryptedEmail
+
+	// decrypt phone number
+	decryptedPhone, err := utils.Decrypt(user.PhoneNumber)
+	if err != nil {
+		return models.User{}, err
+	}
+	user.PhoneNumber = decryptedPhone
+
+	return user, nil
 }
