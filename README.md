@@ -85,6 +85,41 @@ go build -o bin/api ./cmd/api/main.go
 
 ---
 
+## How it works  
+This section will deep-dive into explaining every part of the API and how it works.  
+
+## Session Handling  
+Session handling ensures users stay logged in while keeping their accounts secure. Our implementation follows **best practices using Access Tokens and Refresh Tokens** for authentication.  
+
+### **How It Works**  
+
+1. **User Logs In**  
+   - The server verifies the user's credentials.  
+   - It returns **two tokens**:  
+     - **Access Token** – Short-lived (30 min), used for authentication in API requests.  
+     - **Refresh Token** – Long-lived (7 days), stored in an **HTTP-only Secure Cookie**.  
+
+2. **Access Token Usage**  
+   - The client stores the **Access Token in memory** (e.g., React state, Vuex, Redux).  
+   - All API requests include:  
+     ```
+     Authorization: Bearer <access_token>
+     ```
+   - The server **validates** the token before processing the request.  
+
+3. **Token Expiry & Renewal**  
+   - When the **Access Token expires (after 30 min)**, API requests fail with `401 Unauthorized`.  
+   - The client **automatically requests a new Access Token** using the **Refresh Token**.  
+   - The browser **sends the Refresh Token in an HTTP-only cookie** to `/refresh`.  
+   - If the Refresh Token is valid, the server issues a **new Access Token**.  
+
+4. **Session Expiry & Logout**  
+   - If the Refresh Token is expired (after 7 days) or revoked, the user is logged out.  
+   - The client must **log in again** to get a new session.  
+
+
+---
+
 ## Contribution
 Feel free to contribute by submitting pull requests or reporting issues. Any suggestions for improvement are welcome!
 
