@@ -57,7 +57,10 @@ Set it up as so:
 
 ```env
 DATABASE_URI=<your database uri>
+USER_AES_KEY=<your aes-256 encryption key>
 ```
+
+Make sure you put your unique key **INSIDE THE ENVIRONMENT FILE** and not inside the code. To generate a random secure key, visit [this website](https://generate-random.org/encryption-key-generator) - Leaving everything on default values.
 
 ## Project Setup
 For this part you can either run the Makefile to automatically do the following steps or do it yourself. Considering you will have to do this a large amount of times during development I recommend using and configuring the Makefile to your needs.
@@ -94,12 +97,26 @@ go build -o bin/api ./cmd/api/main.go
 ---
 
 ## How it works  
-This section will deep-dive into explaining every part of the API and how it works.  
+This section will deep-dive into explaining every part of the API and how it works.
 
-## Session Handling  
+### Users
+When a user is created the following will happen:
+
+1. **Endpoint Called**
+2. **User Password Hashed**
+3. **User Email and Phone number encrypted with AES-256**
+4. **Information sent to database for storage**
+
+When a user is fetched the following will happen
+
+1. **Endpoint Called**
+2. **User Email and Phone Number decrypted with AES-256**
+3. **Information displayed** 
+
+### Session Handling  
 Session handling ensures users stay logged in while keeping their accounts secure. Our implementation follows **best practices using Access Tokens and Refresh Tokens** for authentication.  
 
-### **How It Works**  
+#### **How It Works**  
 
 1. **User Logs In**  
    - The server verifies the user's credentials.  
