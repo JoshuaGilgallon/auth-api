@@ -18,7 +18,11 @@ This is an **Authorization API** template that I use as a starting point for all
 ---
 
 ## Important Notes
-Here are some important points you need to consider when using this template
+Here are some important points you need to consider/know when using this template
+
+### Liability Disclaimer
+
+This template is provided **as is**, without any warranties or guarantees. I am **not responsible or liable** for any issues, security vulnerabilities, data loss, or damages that may occur while using, modifying, or deploying this template. Use it at your own risk, and make sure to review and customize it according to your project’s security and operational requirements.
 
 ### MongoDB setup
 The API is currently set up to recieve requests from either a local MongoDB database instance or a remote one. Running it locally will require further installation and setup from the official MongoDB site. If you are using it remotely, for example Atlas, copy and paste your URI into the .env file (you may need to create one, the instruction for how to set it up is in the installation section.
