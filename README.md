@@ -11,9 +11,9 @@ This is an **Authorization API** template that I use as a starting point for all
 - **User Data AES-256 Encryption**
 - **Multi-Factor Authentication (MFA)** via Email, SMS, and Authenticator Apps
 - **Rate Limiting & Brute Force Protection**
+- **Swagger Documentation** (Accessible at `/docs/index.html`)
 - **and much much more!**
 
-- **Swagger Documentation** (Accessible at `/docs/index.html`)
 
 ---
 
