@@ -99,10 +99,11 @@ go build -o bin/api ./cmd/api/main.go
 ## How it works  
 This section will deep-dive into explaining every part of the API and how it works.
 
+---
+
 ### Users
 When a user is created the following will happen:
 
----
 
 1. **Endpoint Called**
 2. **User Password Hashed**
@@ -115,9 +116,9 @@ When a user is fetched the following will happen
 2. **User Email and Phone Number decrypted with AES-256**
 3. **Information displayed** 
 
-### Session Handling
-
 ---
+
+### Session Handling
 
 Session handling ensures users stay logged in while keeping their accounts secure. Our implementation follows **best practices using Access Tokens and Refresh Tokens** for authentication.  
 
@@ -145,8 +146,7 @@ Session handling ensures users stay logged in while keeping their accounts secur
 
 4. **Session Expiry & Logout**  
    - If the Refresh Token is expired (after 7 days) or revoked, the user is logged out.  
-   - The client must **log in again** to get a new session.  
-
+   - The client must **log in again** to get a new session.
 
 ---
 
