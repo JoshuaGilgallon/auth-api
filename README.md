@@ -102,6 +102,8 @@ This section will deep-dive into explaining every part of the API and how it wor
 ### Users
 When a user is created the following will happen:
 
+---
+
 1. **Endpoint Called**
 2. **User Password Hashed**
 3. **User Email and Phone number encrypted with AES-256**
@@ -113,7 +115,10 @@ When a user is fetched the following will happen
 2. **User Email and Phone Number decrypted with AES-256**
 3. **Information displayed** 
 
-### Session Handling  
+### Session Handling
+
+---
+
 Session handling ensures users stay logged in while keeping their accounts secure. Our implementation follows **best practices using Access Tokens and Refresh Tokens** for authentication.  
 
 #### **How It Works**  
