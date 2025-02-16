@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Active Sessions</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/admin">Admin Panel</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="/admin">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/users">Users</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/admin/sessions">Active Sessions</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2>Active Sessions</h2>
+
+        <!-- Toolbar -->
+        <div class="d-flex justify-content-between mb-3">
+            <input type="text" id="searchSession" class="form-control w-25" placeholder="Search sessions...">
+            <div>
+                <button class="btn btn-danger" id="invalidateSession">Invalidate Session</button>
+                <button class="btn btn-success" id="createSession">Create Session</button>
+            </div>
+        </div>
+
+        <!-- Session Table -->
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="selectAllSessions"></th>
+                    <th>ID</th>
+                    <th>User</th>
+                    <th>IP Address</th>
+                    <th>Last Activity</th>
+                </tr>
+            </thead>
+            <tbody id="sessionTableBody">
+                <tr>
+                    <td><input type="checkbox" class="session-checkbox"></td>
+                    <td>101</td>
+                    <td>John Doe</td>
+                    <td>192.168.1.1</td>
+                    <td>5 minutes ago</td>
+                </tr>
+                <!-- More rows dynamically loaded -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Select/Deselect all sessions
+        $("#selectAllSessions").change(function() {
+            $(".session-checkbox").prop('checked', $(this).prop('checked'));
+        });
+
+        // Session search functionality
+        $("#searchSession").on("keyup", function() {
+            let value = $(this).val().toLowerCase();
+            $("#sessionTableBody tr").filter(function() {
+                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+            });
+        });
+
+        // Placeholder functions for buttons
+        $("#invalidateSession").click(() => alert("Invalidate session logic here"));
+        $("#createSession").click(() => alert("Create session form here"));
+    </script>
+</body>
+</html>

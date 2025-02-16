@@ -5,7 +5,6 @@ import (
 	"auth-api/internal/utils"
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -60,7 +59,6 @@ func GetUserByEmail(email string) (models.User, error) {
 	defer cancel()
 
 	hashed_email := utils.HashSHA(email)
-	log.Printf("GetUserByEmail - Original email: %s, Hashed email: %s", email, hashed_email)
 
 	var user models.User
 	filter := bson.M{"email_hash": hashed_email}
@@ -92,4 +90,70 @@ func GetUserByPhoneNumber(phoneNumber string) (models.User, error) {
 	}
 
 	return user, nil
+}
+
+func GetUsersByTimeCreatedRange(startTime, endTime time.Time) ([]models.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{
+		"created_at": bson.M{
+			"$gte": startTime,
+			"$lte": endTime,
+		},
+	}
+
+	cursor, err := userCollection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var users []models.User
+	for cursor.Next(ctx) {
+		var user models.User
+		if err := cursor.Decode(&user); err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
+func GetUsersByTimeUpdatedRange(startTime, endTime time.Time) ([]models.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{
+		"updated_at": bson.M{
+			"$gte": startTime,
+			"$lte": endTime,
+		},
+	}
+
+	cursor, err := userCollection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var users []models.User
+	for cursor.Next(ctx) {
+		var user models.User
+		if err := cursor.Decode(&user); err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }

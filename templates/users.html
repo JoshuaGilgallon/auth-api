@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/admin">Admin Panel</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="/admin">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/admin/users">Users</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/sessions">Active Sessions</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2>User Management</h2>
+
+        <!-- Toolbar -->
+        <div class="d-flex justify-content-between mb-3">
+            <input type="text" id="searchUser" class="form-control w-25" placeholder="Search users...">
+            <div>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#advancedSearchModal">Advanced Search</button>
+                <button class="btn btn-danger" id="deleteUser">Delete</button>
+                <button class="btn btn-warning" id="banUser">Ban</button>
+                <button class="btn btn-success" id="createUser">Create User</button>
+            </div>
+        </div>
+
+        <!-- User Table -->
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="selectAllUsers"></th>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="userTableBody">
+                <tr>
+                    <td><input type="checkbox" class="user-checkbox"></td>
+                    <td>1</td>
+                    <td>John Doe</td>
+                    <td>john@example.com</td>
+                    <td>Active</td>
+                    <td><button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#userDetailsModal" onclick="showUserDetails(1)">View</button></td>
+                </tr>
+                <!-- More rows dynamically loaded -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Advanced Search Modal -->
+    <div class="modal fade" id="advancedSearchModal" tabindex="-1" aria-labelledby="advancedSearchModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="advancedSearchModalLabel">Advanced Search</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="advancedSearchForm">
+                        <div class="mb-3">
+                            <label for="searchEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="searchEmail">
+                        </div>
+                        <div class="mb-3">
+                            <label for="searchPhoneNumber" class="form-label">Phone Number</label>
+                            <input type="text" class="form-control" id="searchPhoneNumber">
+                        </div>
+                        <div class="mb-3">
+                            <label for="searchStartTime" class="form-label">Start Time</label>
+                            <input type="datetime-local" class="form-control" id="searchStartTime">
+                        </div>
+                        <div class="mb-3">
+                            <label for="searchEndTime" class="form-label">End Time</label>
+                            <input type="datetime-local" class="form-control" id="searchEndTime">
+                        </div>
+                        <div class="mb-3">
+                            <label for="searchUpdatedStartTime" class="form-label">Updated Start Time</label>
+                            <input type="datetime-local" class="form-control" id="searchUpdatedStartTime">
+                        </div>
+                        <div class="mb-3">
+                            <label for="searchUpdatedEndTime" class="form-label">Updated End Time</label>
+                            <input type="datetime-local" class="form-control" id="searchUpdatedEndTime">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="advancedSearchButton">Search</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Details Modal -->
+    <div class="modal fade" id="userDetailsModal" tabindex="-1" aria-labelledby="userDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userDetailsModalLabel">User Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <pre id="userDetailsContent"></pre>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Select/Deselect all users
+        $("#selectAllUsers").change(function() {
+            $(".user-checkbox").prop('checked', $(this).prop('checked'));
+        });
+
+        // Simple search functionality
+        $("#searchUser").on("keyup", function() {
+            let value = $(this).val().toLowerCase();
+            $.ajax({
+                url: "/api/admin/searchUserByCredentials",
+                method: "GET",
+                data: { search_term: value },
+                success: function(data) {
+                    // Update the user table with the search results
+                    // Assuming data is an array of users
+                    let userTableBody = $("#userTableBody");
+                    userTableBody.empty();
+                    data.forEach(user => {
+                        userTableBody.append(`
+                            <tr>
+                                <td><input type="checkbox" class="user-checkbox"></td>
+                                <td>${user.id}</td>
+                                <td>${user.name} ${user.last_name}</td>
+                                <td>${user.email}</td>
+                                <td>${user.status}</td>
+                                <td><button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#userDetailsModal" onclick="showUserDetails('${user.id}')">View</button></td>
+                            </tr>
+                        `);
+                    });
+                }
+            });
+        });
+
+        // Advanced search functionality
+        $("#advancedSearchButton").click(function() {
+            let email = $("#searchEmail").val();
+            let phoneNumber = $("#searchPhoneNumber").val();
+            let startTime = $("#searchStartTime").val();
+            let endTime = $("#searchEndTime").val();
+            let updatedStartTime = $("#searchUpdatedStartTime").val();
+            let updatedEndTime = $("#searchUpdatedEndTime").val();
+
+            $.ajax({
+                url: "/api/admin/advancedSearch",
+                method: "GET",
+                data: {
+                    email: email,
+                    phone_number: phoneNumber,
+                    start_time: startTime,
+                    end_time: endTime,
+                    updated_start_time: updatedStartTime,
+                    updated_end_time: updatedEndTime
+                },
+                success: function(data) {
+                    // Update the user table with the search results
+                    // Assuming data is an array of users
+                    let userTableBody = $("#userTableBody");
+                    userTableBody.empty();
+                    data.forEach(user => {
+                        userTableBody.append(`
+                            <tr>
+                                <td><input type="checkbox" class="user-checkbox"></td>
+                                <td>${user.id}</td>
+                                <td>${user.name} ${user.last_name}</td>
+                                <td>${user.email}</td>
+                                <td>${user.status}</td>
+                                <td><button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#userDetailsModal" onclick="showUserDetails('${user.id}')">View</button></td>
+                            </tr>
+                        `);
+                    });
+                    $("#advancedSearchModal").modal('hide');
+                }
+            });
+        });
+
+        // Function to show user details in modal
+        function showUserDetails(userId) {
+            $.ajax({
+                url: `/api/user/${userId}`,
+                method: "GET",
+                success: function(data) {
+                    $("#userDetailsContent").text(JSON.stringify(data, null, 2));
+                }
+            });
+        }
+
+        // Placeholder functions for buttons
+        $("#deleteUser").click(() => alert("Delete user logic here"));
+        $("#banUser").click(() => alert("Ban user logic here"));
+        $("#createUser").click(() => alert("Create user form here"));
+    </script>
+</body>
+</html>

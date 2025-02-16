@@ -7,7 +7,9 @@ import (
 	"auth-api/internal/repositories"
 	"auth-api/internal/server"
 	"log"
+	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -45,6 +47,26 @@ func main() {
 	// Initialize and start the API server
 	r := server.SetupRouter()
 	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	// Load HTML templates
+	r.LoadHTMLGlob("templates/*")
+
+	// Define routes for all admin pages
+	r.GET("/admin", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "dashboard.html", gin.H{"title": "Admin Dashboard"})
+	})
+
+	r.GET("/admin/users", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "users.html", gin.H{"title": "User Management"})
+	})
+
+	r.GET("/admin/sessions", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "sessions.html", gin.H{"title": "Active Sessions"})
+	})
+
+	r.GET("/admin/login", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "admin_login.html", gin.H{"title": "Admin Login"})
+	})
 
 	r.SetTrustedProxies(nil)
 
