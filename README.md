@@ -162,3 +162,6 @@ Feel free to contribute by submitting pull requests or reporting issues. Any sug
 ## License
 This project is open-source and available under the [MIT License](LICENSE).
 
+---
+
+P.S. This is one of my first go projects so don't expect it to be too good.
