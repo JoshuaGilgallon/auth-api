@@ -28,8 +28,12 @@ func SetupRouter() *gin.Engine {
 			sessions.DELETE("/:session_id", handlers.InvalidateSession)
 		}
 
-		api.POST("/login", handlers.Login)
-		api.POST("/logout", handlers.Logout)
+		auth := api.Group("/auth")
+		{
+			auth.POST("/login", handlers.Login)
+			auth.POST("/logout", handlers.Logout)
+			auth.POST("/signup", handlers.SignUp)
+		}
 	}
 
 	return r
