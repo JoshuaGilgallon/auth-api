@@ -73,7 +73,7 @@ For this part you can either run the Makefile to automatically do the following 
 ```sh
 make -f deploy/Makefile run
 ```
-If you are on windows ensure you have the Makefil file set to LF line endings, NOT CRLF.
+If you are on windows ensure you have the Makefile file set to LF line endings, NOT CRLF.
 
 ## Manual Setup
 
