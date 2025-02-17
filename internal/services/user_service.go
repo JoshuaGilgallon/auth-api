@@ -184,3 +184,31 @@ func SearchUsersByTimeUpdatedRange(start, end time.Time) ([]models.User, error) 
 
 	return users, nil
 }
+
+func GetCurrentUser(token string) (models.User, error) {
+	session, err := repositories.GetSessionByAccessToken(token)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	user, err := repositories.GetUserByID(session.UserID.Hex())
+	if err != nil {
+		return models.User{}, err
+	}
+
+	// decrypt email
+	decryptedEmail, err := utils.Decrypt(user.Email)
+	if err != nil {
+		return models.User{}, err
+	}
+	user.Email = decryptedEmail
+
+	// decrypt phone number
+	decryptedPhoneNumber, err := utils.Decrypt(user.PhoneNumber)
+	if err != nil {
+		return models.User{}, err
+	}
+	user.PhoneNumber = decryptedPhoneNumber
+
+	return user, nil
+}
