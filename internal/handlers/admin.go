@@ -113,7 +113,7 @@ func AdvancedSearch(c *gin.Context) {
 // @Produce json
 // @Param username query string false "Email"
 // @Param password query string false "Phone Number"
-// @Success 200 {string} "Logged in"
+// @Success 200 {string} string "Logged in"
 // @Router /api/admin/login [post]
 func AdminLogin(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "Logged in"}) // temporary, add logic later (im in class rn lol)
