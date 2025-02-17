@@ -82,7 +82,7 @@ func GetActiveSessionsByUserID(userID primitive.ObjectID) ([]models.Session, err
 	
 	return sessions, nil
 }
-
+ 
 func UpdateSession(session models.Session) (models.Session, error) {
 	filter := bson.M{"_id": session.ID}
 	update := bson.M{"$set": session}
