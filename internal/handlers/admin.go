@@ -99,3 +99,22 @@ func AdvancedSearch(c *gin.Context) {
 
 	c.JSON(http.StatusOK, uniqueUsers)
 }
+
+// when creating an administrator session,
+// ensure that there is no token stored in a cookie.
+// These tokens refresh after every use due to their administrator nature
+// and therefore need to be more secure. You will be logged out after 30 minutes
+// of inactivity.
+
+// @Summary Administrator portal login
+// @Description Allows an administrator to login to the admin portal
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Param username query string false "Email"
+// @Param password query string false "Phone Number"
+// @Success 200 {string} "Logged in"
+// @Router /api/admin/login [post]
+func AdminLogin(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"status": "Logged in"}) // temporary, add logic later (im in class rn lol)
+}
