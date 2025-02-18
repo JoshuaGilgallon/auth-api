@@ -111,10 +111,23 @@ func AdvancedSearch(c *gin.Context) {
 // @Tags admin
 // @Accept json
 // @Produce json
-// @Param username query string false "Email"
-// @Param password query string false "Phone Number"
+// @Param user body services.AdminLoginInput false "Admin Login Input"
 // @Success 200 {string} string "Logged in"
 // @Router /api/admin/login [post]
 func AdminLogin(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"status": "Logged in"}) // temporary, add logic later (im in class rn lol)
+	var adminLoginInput services.AdminLoginInput
+
+	// Bind JSON request body to loginInput struct
+	if err := c.ShouldBindJSON(&adminLoginInput); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
+
+	session, err := services.AdminLogin(adminLoginInput)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, session)
 }

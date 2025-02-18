@@ -121,3 +121,20 @@ func UpdateAdminSession(adminSession models.AdminSession) (models.AdminSession, 
 	}
 	return adminSession, nil
 }
+
+func InvalidateAdminSessionByAccessToken(accessToken string) error {
+	filter := bson.M{"access_token": accessToken}
+	update := bson.M{"$set": bson.M{"access_expires_at": time.Now()}}
+
+	_, err := adminSesssionCollection.UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return errors.Wrap(err, "failed to invalidate admin session by access token")
+	}
+	return nil
+}
+
+func GetAdminByUsername(username string) (models.AdminUser, error) {
+	var adminUser models.AdminUser
+	err := adminCollection.FindOne(context.Background(), bson.M{"username": username}).Decode(&adminUser)
+	return adminUser, errors.Wrap(err, "failed to get admin by username")
+}

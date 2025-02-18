@@ -1,14 +1,20 @@
 package services
 
 import (
+	"auth-api/internal/errors"
 	"auth-api/internal/models"
 	"auth-api/internal/repositories"
+	"auth-api/internal/utils"
+	"log"
 	"time"
-
-	"auth-api/internal/errors"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+type AdminLoginInput struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
 
 func CreateAdminSession(adminID primitive.ObjectID) (models.AdminSession, error) {
 	if !limiter.Allow() {
@@ -78,4 +84,31 @@ func ValidateAdminAccessToken(accessToken string) (models.AdminSession, error) {
 	repositories.UpdateAdminSession(adminSession)
 
 	return adminSession, nil
+}
+
+func AdminLogin(input AdminLoginInput) (models.AdminSession, error) {
+	var adminUser models.AdminUser
+
+	// Try to get the user by Email first
+	adminUser, err := repositories.GetAdminByUsername(input.Username)
+	if adminUser.ID.IsZero() {
+		log.Printf("Admin account not found with %v", err)
+	}
+
+	// Validate password
+	if !utils.ValidateBcrypt(input.Password, adminUser.Password) {
+		return models.AdminSession{}, errors.NewInvalidCredentialsError("The Password is Incorrect", nil)
+	}
+
+	// Create session
+	adminSession, err := CreateAdminSession(adminUser.ID)
+	if err != nil {
+		return models.AdminSession{}, errors.NewFailedToCreateError("Failed to create session. Please wait a moment and try again, or contact support for assistance.", nil)
+	}
+
+	return adminSession, nil
+}
+
+func AdminLogout(accessToken string) error {
+	return repositories.InvalidateAdminSessionByAccessToken(accessToken)
 }
