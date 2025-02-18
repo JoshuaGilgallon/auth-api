@@ -62,9 +62,13 @@ Set it up as so:
 ```env
 DATABASE_URI=<your database uri>
 USER_AES_KEY=<your aes-256 encryption key>
+ROOT_ADMIN_USER=<admin_username_here>
+ROOT_ADMIN_PASSWORD=<admin_password_here>
 ```
 
-Make sure you put your unique key **INSIDE THE ENVIRONMENT FILE** and not inside the code. To generate a random secure key, visit [this website](https://generate-random.org/encryption-key-generator) - Leaving everything on default values.
+Make sure you put your unique AES encryption key **INSIDE THE ENVIRONMENT FILE** and not inside the code. To generate a random secure key, visit [this website](https://generate-random.org/encryption-key-generator) - Leaving everything on default values.
+
+For the ROOT ADMIN user, this will be the account that you log in to that will manage all the other admin users. It will have the highest clearance level. Make sure NOT to share the login details of this account anywhere. Logging into the admin portal through this account is the only way you can create new admin users.
 
 ## Project Setup
 For this part you can either run the Makefile to automatically do the following steps or do it yourself. Considering you will have to do this a large amount of times during development I recommend using and configuring the Makefile to your needs.
