@@ -1,40 +1,32 @@
 package utils
 
-import (
-	"encoding/hex"
-	"log"
-	"os"
-
-	"github.com/joho/godotenv"
-)
-
 // ENCRYPTION IS DISABLED BY DEFAULT, IF YOU WANT TO ENABLE IT UNCOMMENT THE ENCRYPT AND DECRYPT FUNCTIONS
 
 // load the encryption key from its environment variable
-func getKey() []byte {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+// func getKey() []byte {
+// 	err := godotenv.Load()
+// 	if err != nil {
+// 		log.Fatal("Error loading .env file")
+// 	}
 
-	keyHex := os.Getenv("USER_AES_KEY")
-	if keyHex == "" {
-		log.Fatal("USER_AES_KEY must be set in the .env file")
-	}
+// 	keyHex := os.Getenv("USER_AES_KEY")
+// 	if keyHex == "" {
+// 		log.Fatal("USER_AES_KEY must be set in the .env file")
+// 	}
 
-	// decode it into raw bytes
-	keyBytes, err := hex.DecodeString(keyHex)
-	if err != nil {
-		log.Fatal("USER_AES_KEY is not a valid hex string")
-	}
+// 	// decode it into raw bytes
+// 	keyBytes, err := hex.DecodeString(keyHex)
+// 	if err != nil {
+// 		log.Fatal("USER_AES_KEY is not a valid hex string")
+// 	}
 
-	// ensure the key is 32 bytes - AES-256 requirement
-	if len(keyBytes) != 32 {
-		log.Fatal("USER_AES_KEY must be exactly 32 bytes long")
-	}
+// 	// ensure the key is 32 bytes - AES-256 requirement
+// 	if len(keyBytes) != 32 {
+// 		log.Fatal("USER_AES_KEY must be exactly 32 bytes long")
+// 	}
 
-	return keyBytes
-}
+// 	return keyBytes
+// }
 
 func Encrypt(plainText string) (string, error) {
 	// key := getKey()
