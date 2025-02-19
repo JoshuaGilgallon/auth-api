@@ -1,15 +1,14 @@
 package utils
 
 import (
-	"crypto/aes"
-	"crypto/cipher"
-	"crypto/rand"
 	"encoding/hex"
 	"log"
 	"os"
 
 	"github.com/joho/godotenv"
 )
+
+// ENCRYPTION IS DISABLED BY DEFAULT, IF YOU WANT TO ENABLE IT UNCOMMENT THE ENCRYPT AND DECRYPT FUNCTIONS
 
 // load the encryption key from its environment variable
 func getKey() []byte {
@@ -38,50 +37,53 @@ func getKey() []byte {
 }
 
 func Encrypt(plainText string) (string, error) {
-	key := getKey()
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return "", err
-	}
+	// key := getKey()
+	// block, err := aes.NewCipher(key)
+	// if err != nil {
+	// 	return "", err
+	// }
 
-	nonce := make([]byte, 12)
-	if _, err := rand.Read(nonce); err != nil {
-		return "", err
-	}
+	// nonce := make([]byte, 12)
+	// if _, err := rand.Read(nonce); err != nil {
+	// 	return "", err
+	// }
 
-	aead, err := cipher.NewGCM(block)
-	if err != nil {
-		return "", err
-	}
+	// aead, err := cipher.NewGCM(block)
+	// if err != nil {
+	// 	return "", err
+	// }
 
-	cipherText := aead.Seal(nonce, nonce, []byte(plainText), nil)
-	return hex.EncodeToString(cipherText), nil
+	// cipherText := aead.Seal(nonce, nonce, []byte(plainText), nil)
+	// return hex.EncodeToString(cipherText), nil
+
+	return plainText, nil // Encryption disabled, returns plain text. Comment this and uncomment above to enable.
 }
 
 func Decrypt(cipherText string) (string, error) {
-	key := getKey()
-	cipherTextBytes, err := hex.DecodeString(cipherText)
-	if err != nil {
-		return "", err
-	}
+	// key := getKey()
+	// cipherTextBytes, err := hex.DecodeString(cipherText)
+	// if err != nil {
+	// 	return "", err
+	// }
 
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return "", err
-	}
+	// block, err := aes.NewCipher(key)
+	// if err != nil {
+	// 	return "", err
+	// }
 
-	nonce := cipherTextBytes[:12]
-	encryptedData := cipherTextBytes[12:]
+	// nonce := cipherTextBytes[:12]
+	// encryptedData := cipherTextBytes[12:]
 
-	aead, err := cipher.NewGCM(block)
-	if err != nil {
-		return "", err
-	}
+	// aead, err := cipher.NewGCM(block)
+	// if err != nil {
+	// 	return "", err
+	// }
 
-	plainText, err := aead.Open(nil, nonce, encryptedData, nil)
-	if err != nil {
-		return "", err
-	}
+	// plainText, err := aead.Open(nil, nonce, encryptedData, nil)
+	// if err != nil {
+	// 	return "", err
+	// }
 
-	return string(plainText), nil
+	// return string(plainText), nil
+	return cipherText, nil // Encryption disabled, returns cipher text. Comment this and uncomment above to enable.
 }

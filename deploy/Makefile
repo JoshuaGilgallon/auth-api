@@ -1,7 +1,7 @@
 .PHONY: build run docker-build start-mongodb
 
 # Detect operating system
-ifeq ($(OS),Windows_NT)
+ifeq ($(OS),WinWindows_NT)
     MONGODB_START = mongo_scripts/windows.bat
 else
     UNAME_S := $(shell uname -s)
