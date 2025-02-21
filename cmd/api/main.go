@@ -32,7 +32,7 @@ func main() {
 	// Initialize Swagger docs
 	docs.SwaggerInfo.Title = "Auth API"
 	docs.SwaggerInfo.Description = "Authentication and Authorization API"
-	docs.SwaggerInfo.Version = "Beta 0.6"
+	docs.SwaggerInfo.Version = "Beta 1.2"
 	docs.SwaggerInfo.Host = "localhost:8080"
 	docs.SwaggerInfo.BasePath = "/"
 	docs.SwaggerInfo.Schemes = []string{"http", "https"}
