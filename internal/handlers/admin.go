@@ -153,7 +153,7 @@ func AdminLogout(c *gin.Context) {
 		accessToken = accessToken[7:]
 	}
 
-	if err := services.Logout(accessToken); err != nil {
+	if err := services.AdminLogout(accessToken); err != nil {
 		switch e := err.(type) {
 		case *errors.UserError:
 			switch e.Type {
@@ -171,4 +171,80 @@ func AdminLogout(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "successfully logged out"})
+}
+
+// Root User can only do the following endpoints
+
+// @Summary Create admin user
+// @Description Create a new admin account - Only for root user
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Param request body services.AdminCreationRequest true "Admin creation request with admin user and root credentials"
+// @Success 201 {object} models.AdminUser
+// @Router /api/admin/create [post]
+func CreateAdminAccount(c *gin.Context) {
+	var request services.AdminCreationRequest
+
+	// Bind the JSON request body
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
+
+	// Extract the individual parts
+	adminLoginInput := request.AdminUser
+	rootUserInput := request.RootUser
+
+	// Validate the root user credentials
+	if !services.ValidateRootUserCredentials(rootUserInput.Username, rootUserInput.Password) {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid root user credentials"})
+		return
+	}
+
+	// Create the admin user
+	user, err := services.CreateAdminUser(adminLoginInput)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, user)
+}
+
+// @Summary Validate admin access token
+// @Description Validate an access token and return session info
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Param authorization header string true "Bearer <token>"
+// @Success 200 {object} models.AdminSession
+// @Router /api/admin/validate [get]
+func ValidateAdminSession(c *gin.Context) {
+	token := c.GetHeader("Authorization")
+	if token == "" {
+		token = c.GetHeader("Token")
+	}
+
+	adminSession, err := services.ValidateAdminAccessToken(token)
+	if err != nil {
+		switch e := err.(type) {
+		case *errors.UserError:
+			switch e.Type {
+			case errors.SessionNotFound:
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired session"})
+			case errors.InvalidToken:
+				c.JSON(http.StatusBadRequest, gin.H{"error": "invalid token format"})
+			case errors.TokenExpired:
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "token expired"})
+			default:
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to validate session"})
+			}
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, adminSession)
 }

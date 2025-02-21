@@ -166,3 +166,18 @@ func InvalidateSession(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "session invalidated"})
 }
+
+// ADMIN ENDPOINTS
+
+// @Summary Get Session Cache Stats
+// @Description Returns information about the session cache
+// @Tags sessions
+// @Accept json
+// @Produce json
+// @Param authorization header string true "Bearer <token>"
+// @Success 200 {object} string "cache stats"
+// @Router /api/session/cache [get]
+func GetCacheStats(c *gin.Context) {
+	stats := services.GetCacheStats()
+	c.JSON(http.StatusOK, stats)
+}

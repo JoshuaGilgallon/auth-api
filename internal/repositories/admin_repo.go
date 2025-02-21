@@ -13,22 +13,22 @@ import (
 )
 
 var adminCollection *mongo.Collection
-var adminSesssionCollection *mongo.Collection
+var adminSessionCollection *mongo.Collection
 
-// initialises the user collection
+// initialises the admin user collection
 func SetAdminCollection(collection *mongo.Collection) {
 	adminCollection = collection
 }
 
 func SetAdminSessionCollection(collection *mongo.Collection) {
-	adminSesssionCollection = collection
+	adminSessionCollection = collection
 }
 
 func SaveAdmin(adminUser models.AdminUser) (models.AdminUser, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	result, err := userCollection.InsertOne(ctx, adminUser)
+	result, err := adminCollection.InsertOne(ctx, adminUser)
 	if err != nil {
 		return models.AdminUser{}, err
 	}
@@ -56,7 +56,7 @@ func GetAllAdmins() ([]models.AdminUser, error) {
 }
 
 func CreateAdminSessionIndexes() error {
-	_, err := adminSesssionCollection.Indexes().CreateMany(context.Background(), []mongo.IndexModel{
+	_, err := adminSessionCollection.Indexes().CreateMany(context.Background(), []mongo.IndexModel{
 		{
 			Keys: bson.D{
 				{Key: "access_token", Value: 1},
@@ -73,7 +73,7 @@ func CreateAdminSessionIndexes() error {
 
 func SaveAdminSession(adminSession models.AdminSession) (models.AdminSession, error) {
 	adminSession.CreatedAt = time.Now()
-	result, err := adminSesssionCollection.InsertOne(context.Background(), adminSession)
+	result, err := adminSessionCollection.InsertOne(context.Background(), adminSession)
 	if err != nil {
 		return models.AdminSession{}, err
 	}
@@ -83,7 +83,7 @@ func SaveAdminSession(adminSession models.AdminSession) (models.AdminSession, er
 
 func GetAdminSessionByAccessToken(adminAccessToken string) (models.AdminSession, error) {
 	var adminSession models.AdminSession
-	err := adminSesssionCollection.FindOne(context.Background(), bson.M{"access_token": adminAccessToken}).Decode(&adminSession)
+	err := adminSessionCollection.FindOne(context.Background(), bson.M{"access_token": adminAccessToken}).Decode(&adminSession)
 	return adminSession, errors.Wrap(err, "failed to get session by access token")
 }
 
@@ -93,7 +93,7 @@ func GetActiveSessionsByAdminID(adminID primitive.ObjectID) ([]models.AdminSessi
 		"accss_expires_at": bson.M{"$gt": time.Now()},
 	}
 
-	cursor, err := adminSesssionCollection.Find(context.Background(), filter)
+	cursor, err := adminSessionCollection.Find(context.Background(), filter)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get active sessions")
 	}
@@ -107,7 +107,7 @@ func GetActiveSessionsByAdminID(adminID primitive.ObjectID) ([]models.AdminSessi
 }
 
 func DeleteAdminSession(id primitive.ObjectID) error {
-	_, err := adminSesssionCollection.DeleteOne(context.Background(), bson.M{"_id": id})
+	_, err := adminSessionCollection.DeleteOne(context.Background(), bson.M{"_id": id})
 	return err
 }
 
@@ -115,7 +115,7 @@ func UpdateAdminSession(adminSession models.AdminSession) (models.AdminSession, 
 	filter := bson.M{"_id": adminSession.AdminID}
 	update := bson.M{"$set": adminSession}
 
-	_, err := adminSesssionCollection.UpdateOne(context.Background(), filter, update)
+	_, err := adminSessionCollection.UpdateOne(context.Background(), filter, update)
 	if err != nil {
 		return models.AdminSession{}, errors.Wrap(err, "failed to update admin session")
 	}
@@ -126,7 +126,7 @@ func InvalidateAdminSessionByAccessToken(accessToken string) error {
 	filter := bson.M{"access_token": accessToken}
 	update := bson.M{"$set": bson.M{"access_expires_at": time.Now()}}
 
-	_, err := adminSesssionCollection.UpdateOne(context.Background(), filter, update)
+	_, err := adminSessionCollection.UpdateOne(context.Background(), filter, update)
 	if err != nil {
 		return errors.Wrap(err, "failed to invalidate admin session by access token")
 	}

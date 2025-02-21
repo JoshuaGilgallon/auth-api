@@ -41,7 +41,141 @@
                     <p id="logins-week">Loading...</p>
                 </div>
             </div>
+            <div class="col-md-4">
+                <div class="card p-3">
+                    <h5>Cache Statistics</h5>
+                    <div id="cache-stats">
+                        <p>Hits: <span id="cache-hits">Loading...</span></p>
+                        <p>Misses: <span id="cache-misses">Loading...</span></p>
+                        <p>Total Keys: <span id="cache-keys">Loading...</span></p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+    <script>
+        // Updated authentication check function
+        async function checkAuthentication() {
+            const cookies = document.cookie.split(';');
+            const adminTokenCookie = cookies.find(cookie => cookie.trim().startsWith('AdminAccessToken='));
+            
+            if (!adminTokenCookie) {
+                window.location.href = '/admin/login';
+                return false;
+            }
+
+            const token = adminTokenCookie.split('=')[1].trim();
+            
+            if (!token || token === '') {
+                window.location.href = '/admin/login';
+                return false;
+            }
+
+            // If token is 'root', we don't need to validate
+            if (token === 'root') {
+                return true;
+            }
+
+            // Validate non-root admin token
+            try {
+                const response = await fetch('/api/admin/validate', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': token,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    window.location.href = '/admin/login';
+                    return false;
+                }
+
+                return true;
+            } catch (error) {
+                console.error('Error validating token:', error);
+                window.location.href = '/admin/login';
+                return false;
+            }
+        }
+
+        // Update the initial check to handle async
+        (async () => {
+            if (!await checkAuthentication()) {
+                throw new Error('Not authenticated');
+            }
+            
+            // Move the initial fetch calls here
+            fetchDashboardStats();
+            fetchCacheStats();
+        })();
+
+        // Update the interval to handle async
+        setInterval(async () => {
+            if (await checkAuthentication()) {
+                fetchDashboardStats();
+                fetchCacheStats();
+            }
+        }, 30000);
+
+        async function fetchDashboardStats() {
+            try {
+                const response = await fetch('/api/admin/dashboard-stats', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include' // Include cookies for authentication
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch dashboard stats');
+                }
+
+                const data = await response.json();
+                
+                // Update the dashboard cards with actual data
+                document.getElementById('active-users').textContent = data.activeUsers || '0';
+                document.getElementById('current-sessions').textContent = data.activeSessions || '0';
+                document.getElementById('logins-week').textContent = data.weeklyLogins || '0';
+
+            } catch (error) {
+                console.error('Error fetching dashboard stats:', error);
+                // Update with error message if fetch fails
+                document.getElementById('active-users').textContent = 'Error loading data';
+                document.getElementById('current-sessions').textContent = 'Error loading data';
+                document.getElementById('logins-week').textContent = 'Error loading data';
+            }
+        }
+
+        async function fetchCacheStats() {
+            try {
+                const response = await fetch('/api/session/cache', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('token') // Assuming token is stored in localStorage
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch cache stats');
+                }
+
+                const data = await response.json();
+                
+                // Update the cache stats card with actual data
+                document.getElementById('cache-hits').textContent = data.hits || '0';
+                document.getElementById('cache-misses').textContent = data.misses || '0';
+                document.getElementById('cache-keys').textContent = data.keys || '0';
+
+            } catch (error) {
+                console.error('Error fetching cache stats:', error);
+                document.getElementById('cache-hits').textContent = 'Error';
+                document.getElementById('cache-misses').textContent = 'Error';
+                document.getElementById('cache-keys').textContent = 'Error';
+            }
+        }
+    </script>
 </body>
 </html>
