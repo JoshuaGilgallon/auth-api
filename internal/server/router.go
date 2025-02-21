@@ -39,6 +39,7 @@ func SetupRouter() *gin.Engine {
 		{
 			admin.GET("/advancedSearch", handlers.AdvancedSearch)
 			admin.POST("/login", handlers.AdminLogin)
+			admin.POST("/logout", handlers.AdminLogout)
 		}
 	}
 
