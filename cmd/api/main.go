@@ -16,7 +16,7 @@ import (
 )
 
 // @title Auth API
-// @version 1.0
+// @version 1.2
 // @description Authentication and Authorization API
 // @host localhost:8080
 // @BasePath /
