@@ -15,7 +15,7 @@ import (
 // @Produce json
 // @Param user body services.LoginInput false "Login Input"
 // @Success 200 {string} string "successfully logged in"
-// @Router /api/login [post]
+// @Router /api/auth/login [post]
 func Login(c *gin.Context) {
 	var loginInput services.LoginInput
 
@@ -39,9 +39,9 @@ func Login(c *gin.Context) {
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Security ApiKeyAuth
+// @Param authorization header string true "Bearer <token>"
 // @Success 200 {string} string "successfully logged out"
-// @Router /api/logout [post]
+// @Router /api/auth/logout [post]
 func Logout(c *gin.Context) {
 	accessToken := c.GetHeader("Authorization")
 	if accessToken == "" {
@@ -81,7 +81,7 @@ func Logout(c *gin.Context) {
 // @Produce json
 // @Param user body services.UserInput true "User input data"
 // @Success 201 {object} models.User
-// @Router /api/signup [post]
+// @Router /api/auth/signup [post]
 func SignUp(c *gin.Context) {
 	var userInput services.UserInput
 

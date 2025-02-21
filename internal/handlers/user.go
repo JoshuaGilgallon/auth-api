@@ -55,13 +55,12 @@ func GetUser(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-
 // @Summary Get user info via access token
 // @Description Returns information about the curently authenticated user via their access token
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param token header string true "Access Token"
+// @Param authorization header string true "Bearer <token>"
 // @Success 200 {object} models.User
 // @Router /api/user/me [get]
 func GetCurrentUser(c *gin.Context) {

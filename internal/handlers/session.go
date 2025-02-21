@@ -59,7 +59,7 @@ func CreateSession(c *gin.Context) {
 // @Tags sessions
 // @Accept json
 // @Produce json
-// @Param token header string true "Access Token"
+// @Param authorization header string true "Bearer <token>"
 // @Success 200 {object} models.Session
 // @Router /api/session/validate [get]
 func ValidateSession(c *gin.Context) {
