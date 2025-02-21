@@ -8,12 +8,14 @@ import (
 )
 
 type UserInput struct {
-	FirstName   string `json:"name"`
-	LastName    string `json:"last_name"`
-	Email       string `json:"email"`
-	PhoneNumber string `json:"phone_number"`
-	Password    string `json:"password"`
-	MFAEnabled  bool   `json:"mfa_enabled"`
+	FirstName   string    `json:"name"`
+	LastName    string    `json:"last_name"`
+	Email       string    `json:"email"`
+	PhoneNumber string    `json:"phone_number"`
+	Password    string    `json:"password"`
+	BirthDate   time.Time `json:"birth_date"`
+	Language    string    `json:"language"`
+	MFAEnabled  bool      `json:"mfa_enabled"`
 }
 
 func CreateUser(input UserInput) (models.User, error) {
@@ -48,6 +50,9 @@ func CreateUser(input UserInput) (models.User, error) {
 		PhoneNumber:     encryptedPhoneNumber,
 		PhoneNumberHash: hashedPhoneNumber,
 		Password:        hashedPassword,
+		Bio:             "",
+		BirthDate:       input.BirthDate,
+		Language:        input.Language,
 		CreatedAt:       now,
 		UpdatedAt:       now,
 		MFAEnabled:      input.MFAEnabled,
@@ -136,6 +141,9 @@ func SearchUserByCreateTimeRange(start, end time.Time) ([]models.User, error) {
 			PhoneNumber:     decrypted_phone_number,
 			PhoneNumberHash: user_raw.PhoneNumberHash,
 			Password:        user_raw.Password,
+			Bio:             user_raw.Bio,
+			BirthDate:       user_raw.BirthDate,
+			Language:        user_raw.Language,
 			CreatedAt:       user_raw.CreatedAt,
 			UpdatedAt:       user_raw.UpdatedAt,
 			MFAEnabled:      user_raw.MFAEnabled,
@@ -174,6 +182,9 @@ func SearchUsersByTimeUpdatedRange(start, end time.Time) ([]models.User, error) 
 			PhoneNumber:     decrypted_phone_number,
 			PhoneNumberHash: user_raw.PhoneNumberHash,
 			Password:        user_raw.Password,
+			Bio:             user_raw.Bio,
+			BirthDate:       user_raw.BirthDate,
+			Language:        user_raw.Language,
 			CreatedAt:       user_raw.CreatedAt,
 			UpdatedAt:       user_raw.UpdatedAt,
 			MFAEnabled:      user_raw.MFAEnabled,

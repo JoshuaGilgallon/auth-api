@@ -21,6 +21,9 @@ type User struct {
 	PhoneNumber     string             `bson:"phone_number" json:"phone_number"`
 	PhoneNumberHash string             `bson:"phone_number_hash" json:"phone_number_hash"`
 	Password        string             `bson:"password" json:"password"`
+	Bio             string             `bson:"bio" json:"bio"`
+	BirthDate       time.Time          `bson:"birth_date" json:"birth_date"`
+	Language        string             `bson:"language" json:"language"`
 	CreatedAt       time.Time          `bson:"created_at" json:"created_at"`
 	UpdatedAt       time.Time          `bson:"updated_at" json:"updated_at"`
 	MFAEnabled      bool               `bson:"mfa_enabled" json:"mfa_enabled"`
