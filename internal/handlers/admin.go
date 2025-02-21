@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"auth-api/internal/errors"
 	"auth-api/internal/models"
 	"auth-api/internal/services"
 	"net/http"
@@ -130,4 +131,44 @@ func AdminLogin(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, session)
+}
+
+// @Summary Admin Logout
+// @Description Logout of an admin account
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Param authorization header string true "Bearer <token>"
+// @Success 200 {string} string "successfully logged out"
+// @Router /api/auth/logout [post]
+func AdminLogout(c *gin.Context) {
+	accessToken := c.GetHeader("Authorization")
+	if accessToken == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "missing authorization token"})
+		return
+	}
+
+	// Remove "Bearer " prefix if present
+	if len(accessToken) > 7 && accessToken[:7] == "Bearer " {
+		accessToken = accessToken[7:]
+	}
+
+	if err := services.Logout(accessToken); err != nil {
+		switch e := err.(type) {
+		case *errors.UserError:
+			switch e.Type {
+			case errors.SessionNotFound:
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired session"})
+			case errors.InvalidToken:
+				c.JSON(http.StatusBadRequest, gin.H{"error": "invalid token format"})
+			default:
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to logout"})
+			}
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "successfully logged out"})
 }
