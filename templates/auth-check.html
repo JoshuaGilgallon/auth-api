@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading...</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: #f8f9fa;
+        }
+        .loader {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="loader"></div>
+    <script>
+        async function checkAuthentication() {
+            const cookies = document.cookie.split(';');
+            const adminTokenCookie = cookies.find(cookie => cookie.trim().startsWith('AdminAccessToken='));
+            
+            if (!adminTokenCookie) {
+                window.location.href = '/admin/login';
+                return;
+            }
+
+            const token = adminTokenCookie.split('=')[1].trim();
+            
+            if (!token || token === '') {
+                window.location.href = '/admin/login';
+                return;
+            }
+
+            if (token === 'root') {
+                try {
+                    const dashboardResponse = await fetch('/admin/dashboard/content', {
+                        credentials: 'include'
+                    });
+
+                    if (!dashboardResponse.ok) {
+                        throw new Error('Failed to load dashboard');
+                    }
+
+                    const content = await dashboardResponse.text();
+                    document.open();
+                    document.write(content);
+                    document.close();
+                } catch (error) {
+                    console.error('Failed to load dashboard:', error);
+                    window.location.href = '/admin/login';
+                }
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/validate', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': token,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    window.location.href = '/admin/login';
+                    return;
+                }
+
+                const dashboardResponse = await fetch('/admin/dashboard/content', {
+                    credentials: 'include'
+                });
+
+                if (!dashboardResponse.ok) {
+                    throw new Error('Failed to load dashboard');
+                }
+
+                const content = await dashboardResponse.text();
+                document.open();
+                document.write(content);
+                document.close();
+
+            } catch (error) {
+                console.error('Authentication failed:', error);
+                window.location.href = '/admin/login';
+            }
+        }
+
+        // Run authentication check immediately
+        checkAuthentication();
+    </script>
+</body>
+</html>
