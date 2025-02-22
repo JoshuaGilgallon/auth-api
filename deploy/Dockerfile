@@ -1,24 +1,26 @@
-# Use lightweight Golang image
-FROM golang:1.19
+# Use official Go image
+FROM golang:1.22.4-alpine
 
-WORKDIR /auth-api
+# Set the working directory inside the container
+WORKDIR /app
 
-# Copy go.mod and go.sum first (for better caching)
-COPY go.mod go.sum ./
-RUN go mod download
+# Install dependencies (Make, Swag, MongoDB tools)
+RUN apk add --no-cache make git
 
-# Copy the entire project
-COPY . ./
+# Copy everything into the container
+COPY . .
 
-# Generate Swagger docs AFTER copying the source code
-RUN go install github.com/swaggo/swag/cmd/swag@latest && \
-    swag init -g cmd/api/main.go
+# Install Go dependencies
+RUN go mod tidy
 
-# Build the Go binary
-RUN go build -o main ./cmd/api/main.go
+# Generate Swagger docs
+RUN go install github.com/swaggo/swag/cmd/swag@latest && swag init -g cmd/api/main.go
 
-# Expose the required port
+# Build the API
+RUN go build -o bin/api ./cmd/api/main.go
+
+# Expose the API port
 EXPOSE 8080
 
-# Run the compiled binary
-CMD ["/app/main"]
+# Start the API when the container runs
+CMD ["./bin/api"]

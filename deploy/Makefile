@@ -1,6 +1,6 @@
-.PHONY: build run docker-build start-mongodb
+.PHONY: docker-build docker-run docker-clean start-mongodb
 
-# Detect operating system
+# Detect operating system for MongoDB startup script
 ifeq ($(OS),WinWindows_NT)
     MONGODB_START = mongo_scripts/windows.bat
 else
@@ -12,16 +12,18 @@ else
     endif
 endif
 
-build:
-	go mod tidy
-	swag init -g cmd/api/main.go
-	go build -o bin/api ./cmd/api/main.go
-
-run: build
-	./bin/api
-
+# Build Docker image
 docker-build:
-	docker build -t auth-api .
+	docker build -t auth-api -f deploy/Dockerfile .
 
+# Run Docker container
+docker-run:
+	docker run -p 8080:8080 auth-api
+
+# Remove old Docker image (for rebuilding)
+docker-clean:
+	docker rmi auth-api
+
+# Start MongoDB locally (if needed)
 start-mongodb:
 	$(MONGODB_START)
