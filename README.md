@@ -1,8 +1,12 @@
-# THIS IS CURRENTLY A WORK IN PROGRESS, NOT ALL FEATURES HAVE BEEN IMPLEMENTED YET. THIS VERSION IS BUGGY AND WON'T NECESSARILY WORK. 
+# Authorization API
 
----
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Go Reference](https://pkg.go.dev/badge/golang.org/x/example.svg)](https://pkg.go.dev/)
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=flat&logo=mongodb&logoColor=white)
+![Swagger](https://img.shields.io/badge/-Swagger-%23Clojure?style=flat&logo=swagger&logoColor=white)
 
-# Authorisation API
+> ⚠️ **Note:** THIS IS CURRENTLY A WORK IN PROGRESS, NOT ALL FEATURES HAVE BEEN IMPLEMENTED YET. THIS VERSION IS BUGGY AND WON'T NECESSARILY WORK.
 
 ## Overview
 This is an **Authorization API** template that I use as a starting point for all my projects. It provides a production-ready authentication system built with **Golang** using the **Gin** framework. Feel free to use and customize it for your projects.
@@ -18,7 +22,6 @@ This is an **Authorization API** template that I use as a starting point for all
 - **Swagger Documentation** (Accessible at `/docs/index.html`)
 - **and much much more!**
 
-
 ---
 
 ## Important Notes
@@ -26,36 +29,21 @@ Here are some important points you need to consider/know when using this templat
 
 ### Liability Disclaimer
 
-This template is provided **as is**, without any warranties or guarantees. I am **not responsible or liable** for any issues, security vulnerabilities, data loss, or damages that may occur while using, modifying, or deploying this template. Use it at your own risk, and make sure to review and customize it according to your project’s security and operational requirements.
+⚠️ This template is provided **as is**, without any warranties or guarantees. I am **not responsible or liable** for any issues, security vulnerabilities, data loss, or damages that may occur while using, modifying, or deploying this template. Use it at your own risk, and make sure to review and customize it according to your project's security and operational requirements.
 
 ### MongoDB setup
-The API is currently set up to recieve requests from either a local MongoDB database instance or a remote one. Running it locally will require further installation and setup from the official MongoDB site. If you are using it remotely, for example Atlas, copy and paste your URI into the .env file (you may need to create one, the instruction for how to set it up is in the installation section.
+The API is currently set up to recieve requests from either a local MongoDB database instance or a remote one. Running it locally will require further installation and setup from the official MongoDB site. If you are using it remotely, for example Atlas, copy and paste your URI into the .env file (you may need to create one, the instruction for how to set it up is in the installation section. Docker will NOT install MongoDB, therefore you either need to download it yourself or create a remote instance.
 
 ---
 
-## Installation
+## Setup
 
-### Install Go
-Download and install Go from the official site: [Go Installation Guide](https://go.dev/doc/install)
+### Prerequisites
 
-### Add Go's Bin Directory to PATH (macOS)
-```sh
-echo 'export PATH=$PATH:$(go env GOPATH)/bin' >> ~/.bash_profile
-source ~/.bash_profile
-```
+[![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/products/docker-desktop/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 
-### Install Swag (Swagger Documentation Generator)
-```sh
-go install github.com/swaggo/swag/cmd/swag@latest
-```
-
-#### Verify Swag Installation
-```sh
-swag -v
-```
-If you encounter issues, ensure Go is added to your system's PATH (see macOS steps above).
-
-### Create a .env file
+### Create an environment file
 Create your .env file in the root directory of the auth-api folder.
 Set it up as so:
 
@@ -68,38 +56,16 @@ ROOT_ADMIN_PASSWORD=<admin_password_here>
 
 Make sure you put your unique AES encryption key **INSIDE THE ENVIRONMENT FILE** and not inside the code. To generate a random secure key, visit [this website](https://generate-random.org/encryption-key-generator) - Leaving everything on default values.
 
-For the ROOT ADMIN user, this will be the account that you log in to that will manage all the other admin users. It will have the highest clearance level. Make sure NOT to share the login details of this account anywhere. Logging into the admin portal through this account is the only way you can create new admin users.
+For the ROOT ADMIN user section; this will be the account that you log in to that will manage all the other admin users. It will have the highest clearance level. Make sure NOT to share the login details of this account anywhere. Logging into the admin portal through this account is the only way you can create new admin users.
 
-## Project Setup
-For this part you can either run the Makefile to automatically do the following steps or do it yourself. Considering you will have to do this a large amount of times during development I recommend using and configuring the Makefile to your needs.
+### Quick Start
 
-### Makefile
 ```sh
-make -f deploy/Makefile run
-```
-If you are on windows ensure you have the Makefile file set to LF line endings, NOT CRLF.
+# Build the docker image
+make -f deploy/Makefile docker-build
 
-## Manual Setup
-
-### Initialize Swagger Documentation
-```sh
-swag init -g cmd/api/main.go
-```
-
-### Manage Dependencies
-```sh
-go mod tidy
-```
-
-### Run the API
-```sh
-go run cmd/api/main.go
-```
-
-OR build it
-```sh
-go build -o bin/api ./cmd/api/main.go
-./bin/api
+# Run the docker image
+make -f deploy/Makefile docker-run
 ```
 
 ---
@@ -111,7 +77,6 @@ This section will deep-dive into explaining every part of the API and how it wor
 
 ### Users
 When a user is created the following will happen:
-
 
 1. **Endpoint Called**
 2. **User Password Hashed**
@@ -158,14 +123,22 @@ Session handling ensures users stay logged in while keeping their accounts secur
 
 ---
 
-## Contribution
+## Contributing
+
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
+
 Feel free to contribute by submitting pull requests or reporting issues. Any suggestions for improvement are welcome!
 
 ---
 
 ## License
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 This project is open-source and available under the [MIT License](LICENSE).
 
 ---
 
-P.S. This is one of my first go projects so don't expect it to be too good.
+<div align="center">
+<sup>P.S. This is one of my first go projects so don't expect it to be too good.</sup>
+</div>
