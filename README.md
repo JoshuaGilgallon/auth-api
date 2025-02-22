@@ -1,8 +1,13 @@
-# THIS IS CURRENTLY A WORK IN PROGRESS, NOT ALL FEATURES HAVE BEEN IMPLEMENTED YET. THIS VERSION IS BUGGY AND WON'T NECESSARILY WORK. 
+# Authorization API
 
----
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Go Reference](https://pkg.go.dev/badge/golang.org/x/example.svg)](https://pkg.go.dev/)
+[![Go Report Card](https://goreportcard.com/badge/github.com/youruser/auth-api)](https://goreportcard.com/report/github.com/youruser/auth-api)
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=flat&logo=mongodb&logoColor=white)
+![Swagger](https://img.shields.io/badge/-Swagger-%23Clojure?style=flat&logo=swagger&logoColor=white)
 
-# Authorisation API
+> ⚠️ **Note:** THIS IS CURRENTLY A WORK IN PROGRESS, NOT ALL FEATURES HAVE BEEN IMPLEMENTED YET. THIS VERSION IS BUGGY AND WON'T NECESSARILY WORK.
 
 ## Overview
 This is an **Authorization API** template that I use as a starting point for all my projects. It provides a production-ready authentication system built with **Golang** using the **Gin** framework. Feel free to use and customize it for your projects.
@@ -25,7 +30,7 @@ Here are some important points you need to consider/know when using this templat
 
 ### Liability Disclaimer
 
-This template is provided **as is**, without any warranties or guarantees. I am **not responsible or liable** for any issues, security vulnerabilities, data loss, or damages that may occur while using, modifying, or deploying this template. Use it at your own risk, and make sure to review and customize it according to your project’s security and operational requirements.
+⚠️ This template is provided **as is**, without any warranties or guarantees. I am **not responsible or liable** for any issues, security vulnerabilities, data loss, or damages that may occur while using, modifying, or deploying this template. Use it at your own risk, and make sure to review and customize it according to your project's security and operational requirements.
 
 ### MongoDB setup
 The API is currently set up to recieve requests from either a local MongoDB database instance or a remote one. Running it locally will require further installation and setup from the official MongoDB site. If you are using it remotely, for example Atlas, copy and paste your URI into the .env file (you may need to create one, the instruction for how to set it up is in the installation section. Docker will NOT install MongoDB, therefore you either need to download it yourself or create a remote instance.
@@ -33,8 +38,11 @@ The API is currently set up to recieve requests from either a local MongoDB data
 ---
 
 ## Setup
-### Install docker
-Make sure you have downloaded docker and installed it on your system. Download it [here](https://www.docker.com/products/docker-desktop/).
+
+### Prerequisites
+
+[![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/products/docker-desktop/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 
 ### Create an environment file
 Create your .env file in the root directory of the auth-api folder.
@@ -51,14 +59,13 @@ Make sure you put your unique AES encryption key **INSIDE THE ENVIRONMENT FILE**
 
 For the ROOT ADMIN user section; this will be the account that you log in to that will manage all the other admin users. It will have the highest clearance level. Make sure NOT to share the login details of this account anywhere. Logging into the admin portal through this account is the only way you can create new admin users.
 
-### Makefile
-First, build the docker image.
-```sh
-make -f deploy/Makefile docker-build
-```
+### Quick Start
 
-Then run the docker image.
 ```sh
+# Build the docker image
+make -f deploy/Makefile docker-build
+
+# Run the docker image
 make -f deploy/Makefile docker-run
 ```
 
@@ -71,7 +78,6 @@ This section will deep-dive into explaining every part of the API and how it wor
 
 ### Users
 When a user is created the following will happen:
-
 
 1. **Endpoint Called**
 2. **User Password Hashed**
@@ -118,14 +124,22 @@ Session handling ensures users stay logged in while keeping their accounts secur
 
 ---
 
-## Contribution
+## Contributing
+
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
+
 Feel free to contribute by submitting pull requests or reporting issues. Any suggestions for improvement are welcome!
 
 ---
 
 ## License
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 This project is open-source and available under the [MIT License](LICENSE).
 
 ---
 
-P.S. This is one of my first go projects so don't expect it to be too good.
+<div align="center">
+<sup>P.S. This is one of my first go projects so don't expect it to be too good.</sup>
+</div>
