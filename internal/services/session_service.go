@@ -5,7 +5,7 @@ import (
 	"auth-api/internal/repositories"
 	"crypto/rand"
 	"crypto/sha256"
-	"fmt"
+	"encoding/hex"
 	"sync"
 	"time"
 
@@ -52,7 +52,7 @@ func generateSecureToken() (string, error) {
 	hash.Write(b)
 	hash.Write([]byte(time.Now().String()))
 
-	return fmt.Sprintf("%x", hash.Sum(nil)), nil
+	return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
 func addToCache(session models.Session) {

@@ -4,7 +4,7 @@ import (
 	"auth-api/internal/models"
 	"auth-api/internal/utils"
 	"context"
-	"fmt"
+	"log"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -46,7 +46,8 @@ func GetUserByID(id string) (models.User, error) {
 	err = userCollection.FindOne(ctx, filter).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return models.User{}, fmt.Errorf("user not found with id: %s", id)
+			log.Printf("user not found with id: %s", id)
+			return models.User{}, err
 		}
 		return models.User{}, err
 	}
@@ -65,7 +66,8 @@ func GetUserByEmail(email string) (models.User, error) {
 	err := userCollection.FindOne(ctx, filter).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return models.User{}, fmt.Errorf("user not found with email: %s", email)
+			log.Printf("user not found with email: %s", email)
+			return models.User{}, err
 		}
 		return models.User{}, err
 	}
@@ -84,7 +86,8 @@ func GetUserByPhoneNumber(phoneNumber string) (models.User, error) {
 	err := userCollection.FindOne(ctx, filter).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return models.User{}, fmt.Errorf("user not found with phone number: %s", phoneNumber)
+			log.Printf("user not found with phone number: %s", phoneNumber)
+			return models.User{}, err
 		}
 		return models.User{}, err
 	}

@@ -1,11 +1,11 @@
 package main
 
 import (
-	"fmt"
+	"log"
 )
 
 func main() {
-	fmt.Println("Worker service started...")
+	log.Println("Worker service started...")
 
 	// Worker logic here (e.g., consume jobs from a queue)
 }

@@ -1,9 +1,10 @@
 package server
 
 import (
-	"fmt"
-	"github.com/gin-gonic/gin"
+	"log"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 // Logging middleware
@@ -11,6 +12,6 @@ func LoggerMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		startTime := time.Now()
 		c.Next()
-		fmt.Printf("Request processed in %v\n", time.Since(startTime))
+		log.Printf("Request processed in %v\n", time.Since(startTime))
 	}
 }
