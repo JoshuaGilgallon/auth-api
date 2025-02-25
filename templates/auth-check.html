@@ -31,17 +31,9 @@
     <div class="loader"></div>
     <script>
         async function checkAuthentication() {
-            const cookies = document.cookie.split(';');
-            const adminTokenCookie = cookies.find(cookie => cookie.trim().startsWith('AdminAccessToken='));
+            const token = sessionStorage.getItem('adminToken');
             
-            if (!adminTokenCookie) {
-                window.location.href = '/admin/login';
-                return;
-            }
-
-            const token = adminTokenCookie.split('=')[1].trim();
-            
-            if (!token || token === '') {
+            if (!token) {
                 window.location.href = '/admin/login';
                 return;
             }
@@ -49,7 +41,9 @@
             if (token === 'root') {
                 try {
                     const dashboardResponse = await fetch('/admin/dashboard/content', {
-                        credentials: 'include'
+                        headers: {
+                            'Authorization': token
+                        }
                     });
 
                     if (!dashboardResponse.ok) {
@@ -77,12 +71,15 @@
                 });
 
                 if (!response.ok) {
+                    sessionStorage.removeItem('adminToken');
                     window.location.href = '/admin/login';
                     return;
                 }
 
                 const dashboardResponse = await fetch('/admin/dashboard/content', {
-                    credentials: 'include'
+                    headers: {
+                        'Authorization': token
+                    }
                 });
 
                 if (!dashboardResponse.ok) {
@@ -96,6 +93,7 @@
 
             } catch (error) {
                 console.error('Authentication failed:', error);
+                sessionStorage.removeItem('adminToken');
                 window.location.href = '/admin/login';
             }
         }

@@ -51,8 +51,8 @@
                     throw new Error(data.message || 'Login failed');
                 }
 
-                // Set the access token cookie using the access_token from the response
-                document.cookie = `AdminAccessToken=${data.access_token}; path=/; secure; samesite=Strict`;
+                // Store token in sessionStorage instead of localStorage
+                sessionStorage.setItem('adminToken', data.access_token);
 
                 // Redirect to dashboard
                 window.location.href = '/admin';
