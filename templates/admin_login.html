@@ -51,10 +51,7 @@
                     throw new Error(data.message || 'Login failed');
                 }
 
-                // Store token in sessionStorage instead of localStorage
                 sessionStorage.setItem('adminToken', data.access_token);
-
-                // Redirect to dashboard
                 window.location.href = '/admin';
 
             } catch (error) {

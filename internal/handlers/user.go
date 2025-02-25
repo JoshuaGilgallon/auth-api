@@ -1,8 +1,12 @@
 package handlers
 
 import (
+	"auth-api/internal/errors"
 	"auth-api/internal/services"
+	"auth-api/internal/utils"
+	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,16 +22,48 @@ import (
 func CreateUser(c *gin.Context) {
 	var userInput services.UserInput
 	if err := c.ShouldBindJSON(&userInput); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		log.Printf("Invalid user creation request: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
+
+	// Sanitize inputs
+	userInput.Email = strings.TrimSpace(userInput.Email)
+	userInput.PhoneNumber = strings.TrimSpace(userInput.PhoneNumber)
+
+	// Validate required fields
+	if userInput.Email == "" && userInput.PhoneNumber == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email or phone number is required"})
+		return
+	}
+
+	if !utils.IsValidPassword(userInput.Password) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Password does not meet security requirements"})
 		return
 	}
 
 	user, err := services.CreateUser(userInput)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("User creation error: %v", err)
+
+		switch e := err.(type) {
+		case *errors.UserError:
+			switch e.Type {
+			case errors.AlreadyExists:
+				c.JSON(http.StatusConflict, gin.H{"error": "User already exists"})
+			case errors.ValidationError:
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input data"})
+			default:
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+			}
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		}
 		return
 	}
 
+	// Log success but don't expose full user details
+	log.Printf("User created successfully with ID: %s", user.ID.Hex())
 	c.JSON(http.StatusCreated, user)
 }
 
@@ -40,10 +76,29 @@ func CreateUser(c *gin.Context) {
 // @Success 200 {object} models.User
 // @Router /api/user/{id} [get]
 func GetUser(c *gin.Context) {
-	id := c.Param("id")
+	id := strings.TrimSpace(c.Param("id"))
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User ID is required"})
+		return
+	}
+
 	user, err := services.GetUser(id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("Error fetching user %s: %v", id, err)
+
+		switch e := err.(type) {
+		case *errors.UserError:
+			switch e.Type {
+			case errors.NotFound:
+				c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+			case errors.ValidationError:
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID format"})
+			default:
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user"})
+			}
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		}
 		return
 	}
 
@@ -64,16 +119,34 @@ func GetUser(c *gin.Context) {
 // @Success 200 {object} models.User
 // @Router /api/user/me [get]
 func GetCurrentUser(c *gin.Context) {
-	token := c.GetHeader("Authorization")
+	token := utils.ExtractBearerToken(c.GetHeader("Authorization"))
 	if token == "" {
-		token = c.GetHeader("Token")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "No authorization token provided"})
+		return
 	}
 
 	user, err := services.GetCurrentUser(token)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("Error fetching current user: %v", err)
+
+		switch e := err.(type) {
+		case *errors.UserError:
+			switch e.Type {
+			case errors.SessionNotFound, errors.TokenExpired:
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired session"})
+			case errors.InvalidToken:
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid token format"})
+			case errors.NotFound:
+				c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+			default:
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user information"})
+			}
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		}
 		return
 	}
 
+	log.Printf("Current user info retrieved for user ID: %s", user.ID.Hex())
 	c.JSON(http.StatusOK, user)
 }

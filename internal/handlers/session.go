@@ -3,7 +3,10 @@ package handlers
 import (
 	"auth-api/internal/errors"
 	"auth-api/internal/services"
+	"auth-api/internal/utils"
+	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -23,34 +26,42 @@ func CreateSession(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, errors.NewValidationError("invalid request format", err))
+		log.Printf("Invalid session creation request: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
 		return
 	}
 
+	// Sanitize input
+	input.UserID = strings.TrimSpace(input.UserID)
+
 	userID, err := primitive.ObjectIDFromHex(input.UserID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, errors.NewValidationError("invalid user ID format", err))
+		log.Printf("Invalid user ID format: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID format"})
 		return
 	}
 
 	session, err := services.CreateSession(userID)
 	if err != nil {
+		log.Printf("Session creation failed for user %s: %v", input.UserID, err)
+
 		switch e := err.(type) {
 		case *errors.UserError:
 			switch e.Type {
 			case errors.RateLimitExceeded:
-				c.JSON(http.StatusTooManyRequests, e)
+				c.JSON(http.StatusTooManyRequests, gin.H{"error": "Too many session requests"})
 			case errors.MaxSessionsReached:
-				c.JSON(http.StatusConflict, e)
+				c.JSON(http.StatusConflict, gin.H{"error": "Maximum active sessions reached"})
 			default:
-				c.JSON(http.StatusInternalServerError, e)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create session"})
 			}
 		default:
-			c.JSON(http.StatusInternalServerError, errors.NewInternalError("failed to create session", err))
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		}
 		return
 	}
 
+	log.Printf("Session created successfully for user: %s", input.UserID)
 	c.JSON(http.StatusCreated, session)
 }
 
@@ -63,34 +74,30 @@ func CreateSession(c *gin.Context) {
 // @Success 200 {object} models.Session
 // @Router /api/session/validate [get]
 func ValidateSession(c *gin.Context) {
-	token := c.GetHeader("Authorization")
+	token := utils.ExtractBearerToken(c.GetHeader("Authorization"))
 	if token == "" {
-		token = c.GetHeader("Token")
-	}
-
-	if token == "" {
-		c.JSON(http.StatusBadRequest, errors.NewValidationError("no token provided", nil))
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "No token provided"})
 		return
-	}
-
-	if len(token) > 7 && token[:7] == "Bearer " {
-		token = token[7:]
 	}
 
 	session, err := services.ValidateAccessToken(token)
 	if err != nil {
+		log.Printf("Session validation failed: %v", err)
+
 		switch e := err.(type) {
 		case *errors.UserError:
 			switch e.Type {
 			case errors.SessionExpired, errors.TokenExpired:
-				c.JSON(http.StatusUnauthorized, e)
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Session expired"})
 			case errors.SessionNotFound:
-				c.JSON(http.StatusNotFound, e)
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid session"})
+			case errors.InvalidToken:
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid token format"})
 			default:
-				c.JSON(http.StatusInternalServerError, e)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Session validation failed"})
 			}
 		default:
-			c.JSON(http.StatusInternalServerError, errors.NewInternalError("failed to validate token", err))
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		}
 		return
 	}
@@ -112,28 +119,41 @@ func RefreshSession(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, errors.NewValidationError("invalid refresh token format", err))
+		log.Printf("Invalid refresh token request: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
+
+	// Sanitize input
+	input.RefreshToken = strings.TrimSpace(input.RefreshToken)
+	if input.RefreshToken == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Refresh token is required"})
 		return
 	}
 
 	session, err := services.RefreshAccessToken(input.RefreshToken)
 	if err != nil {
+		log.Printf("Session refresh failed: %v", err)
+
 		switch e := err.(type) {
 		case *errors.UserError:
 			switch e.Type {
 			case errors.TokenExpired:
-				c.JSON(http.StatusUnauthorized, e)
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Refresh token expired"})
 			case errors.SessionNotFound:
-				c.JSON(http.StatusNotFound, e)
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid session"})
+			case errors.InvalidToken:
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid token format"})
 			default:
-				c.JSON(http.StatusInternalServerError, e)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to refresh session"})
 			}
 		default:
-			c.JSON(http.StatusInternalServerError, errors.NewInternalError("failed to refresh token", err))
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		}
 		return
 	}
 
+	log.Printf("Session refreshed successfully")
 	c.JSON(http.StatusOK, session)
 }
 
@@ -146,25 +166,33 @@ func RefreshSession(c *gin.Context) {
 // @Success 200 {object} string "session invalidated"
 // @Router /api/session/{token} [delete]
 func InvalidateSession(c *gin.Context) {
-	token := c.Param("session_id")
+	token := utils.ExtractBearerToken(c.Param("session_id"))
+	if token == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid session ID"})
+		return
+	}
+
 	if err := services.InvalidateSessionByToken(token); err != nil {
+		log.Printf("Session invalidation failed: %v", err)
+
 		switch e := err.(type) {
 		case *errors.UserError:
 			switch e.Type {
 			case errors.SessionNotFound:
-				c.JSON(http.StatusNotFound, e)
+				c.JSON(http.StatusNotFound, gin.H{"error": "Session not found"})
 			case errors.InvalidToken:
-				c.JSON(http.StatusBadRequest, e)
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid token format"})
 			default:
-				c.JSON(http.StatusInternalServerError, e)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to invalidate session"})
 			}
 		default:
-			c.JSON(http.StatusInternalServerError, errors.NewInternalError("failed to invalidate session", err))
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		}
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "session invalidated"})
+	log.Printf("Session invalidated successfully")
+	c.JSON(http.StatusOK, gin.H{"message": "Session invalidated"})
 }
 
 // ADMIN ENDPOINTS
@@ -178,6 +206,13 @@ func InvalidateSession(c *gin.Context) {
 // @Success 200 {object} string "cache stats"
 // @Router /api/session/cache [get]
 func GetCacheStats(c *gin.Context) {
+	// Verify admin session first
+	adminSession, err := validateAdminSession(c)
+	if err != nil {
+		return
+	}
+
+	log.Printf("Cache stats requested by admin: %s", adminSession.AdminID)
 	stats := services.GetCacheStats()
 	c.JSON(http.StatusOK, stats)
 }

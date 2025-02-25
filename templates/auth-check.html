@@ -38,31 +38,8 @@
                 return;
             }
 
-            if (token === 'root') {
-                try {
-                    const dashboardResponse = await fetch('/admin/dashboard/content', {
-                        headers: {
-                            'Authorization': token
-                        }
-                    });
-
-                    if (!dashboardResponse.ok) {
-                        throw new Error('Failed to load dashboard');
-                    }
-
-                    const content = await dashboardResponse.text();
-                    document.open();
-                    document.write(content);
-                    document.close();
-                } catch (error) {
-                    console.error('Failed to load dashboard:', error);
-                    window.location.href = '/admin/login';
-                }
-                return;
-            }
-
             try {
-                const response = await fetch('/api/admin/validate', {
+                const validationResponse = await fetch('/api/admin/validate', {
                     method: 'GET',
                     headers: {
                         'Authorization': token,
@@ -70,7 +47,7 @@
                     }
                 });
 
-                if (!response.ok) {
+                if (!validationResponse.ok) {
                     sessionStorage.removeItem('adminToken');
                     window.location.href = '/admin/login';
                     return;
@@ -90,15 +67,13 @@
                 document.open();
                 document.write(content);
                 document.close();
-
             } catch (error) {
-                console.error('Authentication failed:', error);
+                console.error('Failed to load dashboard:', error);
                 sessionStorage.removeItem('adminToken');
                 window.location.href = '/admin/login';
             }
         }
 
-        // Run authentication check immediately
         checkAuthentication();
     </script>
 </body>

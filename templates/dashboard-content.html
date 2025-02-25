@@ -53,13 +53,15 @@
             </div>
         </div>
     </div>
-    <script>
+    <script type="module">
         async function fetchDashboardStats() {
             try {
+                const token = sessionStorage.getItem('adminToken');
                 const response = await fetch('/api/admin/dashboard-stats', {
                     method: 'GET',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': token
                     },
                     credentials: 'include'
                 });
@@ -84,11 +86,12 @@
 
         async function fetchCacheStats() {
             try {
+                const token = sessionStorage.getItem('adminToken');
                 const response = await fetch('/api/session/cache', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                        'Authorization': token
                     }
                 });
 
