@@ -94,7 +94,7 @@ func AdvancedSearch(c *gin.Context) {
 }
 
 // when creating an administrator session, ensure that there is no token stored in a cookie.
-// These tokens refresh after every use due to their administrator nature and therefore need to be more secure. 
+// These tokens refresh after every use due to their administrator nature and therefore need to be more secure.
 // You will be logged out after 30 minutes of inactivity.
 
 // @Summary Administrator portal login
@@ -129,9 +129,19 @@ func AdminLogin(c *gin.Context) {
 		return
 	}
 
-	// Log successful login
-	log.Printf("Admin login successful: %s", adminLoginInput.Username)
-	c.JSON(http.StatusOK, session)
+	// Set secure HTTP-only cookie
+	c.SetCookie(
+		"admin_token",
+		session.(map[string]interface{})["access_token"].(string),
+		1800, // 30 minutes
+		"/",
+		"",
+		true, // secure
+		true, // httpOnly
+	)
+
+	// Don't send the token in the response body
+	c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
 }
 
 // @Summary Admin Logout
@@ -143,17 +153,16 @@ func AdminLogin(c *gin.Context) {
 // @Success 200 {string} string "successfully logged out"
 // @Router /api/admin/logout [post]
 func AdminLogout(c *gin.Context) {
-	accessToken := utils.ExtractBearerToken(c.GetHeader("Authorization"))
-	if accessToken == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-
-	if err := services.AdminLogout(accessToken); err != nil {
-		log.Printf("Logout error: %v", err)
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
+	// Clear the cookie
+	c.SetCookie(
+		"admin_token",
+		"",
+		-1,
+		"/",
+		"",
+		true,
+		true,
+	)
 
 	c.JSON(http.StatusOK, gin.H{"message": "logged out"})
 }
@@ -212,13 +221,13 @@ func CreateAdminAccount(c *gin.Context) {
 // @Tags admin
 // @Accept json
 // @Produce json
-// @Param authorization header string true "Bearer <token>"
 // @Success 200 {object} models.AdminSession
 // @Router /api/admin/validate [get]
 func ValidateAdminSession(c *gin.Context) {
-	token := c.GetHeader("Authorization")
-	if token == "" {
-		token = c.GetHeader("Token")
+	token, err := c.Cookie("admin_token")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "missing token"})
+		return
 	}
 
 	adminSession, err := services.ValidateAdminAccessToken(token)
@@ -245,8 +254,8 @@ func ValidateAdminSession(c *gin.Context) {
 }
 
 func validateAdminSession(c *gin.Context) (models.AdminSession, error) {
-	token := utils.ExtractBearerToken(c.GetHeader("Authorization"))
-	if token == "" {
+	token, err := c.Cookie("admin_token")
+	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return models.AdminSession{}, errors.NewAuthenticationError("missing token", nil)
 	}

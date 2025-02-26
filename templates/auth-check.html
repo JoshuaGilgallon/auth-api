@@ -31,32 +31,19 @@
     <div class="loader"></div>
     <script>
         async function checkAuthentication() {
-            const token = sessionStorage.getItem('adminToken');
-            
-            if (!token) {
-                window.location.href = '/admin/login';
-                return;
-            }
-
             try {
                 const validationResponse = await fetch('/api/admin/validate', {
                     method: 'GET',
-                    headers: {
-                        'Authorization': token,
-                        'Content-Type': 'application/json'
-                    }
+                    credentials: 'include'  // Important: include credentials
                 });
 
                 if (!validationResponse.ok) {
-                    sessionStorage.removeItem('adminToken');
                     window.location.href = '/admin/login';
                     return;
                 }
 
                 const dashboardResponse = await fetch('/admin/dashboard/content', {
-                    headers: {
-                        'Authorization': token
-                    }
+                    credentials: 'include'  // Important: include credentials
                 });
 
                 if (!dashboardResponse.ok) {
@@ -69,7 +56,6 @@
                 document.close();
             } catch (error) {
                 console.error('Failed to load dashboard:', error);
-                sessionStorage.removeItem('adminToken');
                 window.location.href = '/admin/login';
             }
         }

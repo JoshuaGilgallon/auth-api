@@ -42,6 +42,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    credentials: 'include',
                     body: JSON.stringify({ username, password })
                 });
 
@@ -51,7 +52,6 @@
                     throw new Error(data.message || 'Login failed');
                 }
 
-                sessionStorage.setItem('adminToken', data.access_token);
                 window.location.href = '/admin';
 
             } catch (error) {
