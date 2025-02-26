@@ -129,10 +129,6 @@ func ValidateRootUserCredentials(username string, password string) bool {
 	rootUsername := os.Getenv("ROOT_ADMIN_USERNAME")
 	rootPassword := os.Getenv("ROOT_ADMIN_PASSWORD")
 
-	// Debug prints
-	log.Printf("Input username: '%s', env username: '%s'", username, rootUsername)
-	log.Printf("Input password: '%s', env password: '%s'", password, rootPassword)
-
 	if rootUsername == "" {
 		log.Printf("Warning: ROOT_ADMIN_USERNAME environment variable is not set")
 		return false
