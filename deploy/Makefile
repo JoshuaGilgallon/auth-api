@@ -1,15 +1,10 @@
 .PHONY: docker-build docker-run docker-clean start-mongodb
 
 # Detect operating system for MongoDB startup script
-ifeq ($(OS),WinWindows_NT)
+ifeq ($(OS),Windows_NT)
     MONGODB_START = mongo_scripts/windows.bat
 else
-    UNAME_S := $(shell uname -s)
-    ifeq ($(UNAME_S),Darwin)
-        MONGODB_START = mongo_scripts/macos.sh
-    else
-        MONGODB_START = mongo_scripts/linux.sh
-    endif
+    MONGODB_START = $(shell uname -s | grep -q Darwin && echo mongo_scripts/macos.sh || echo mongo_scripts/linux.sh)
 endif
 
 # Build API Docker image
@@ -39,13 +34,18 @@ docker-run:
 
 # Stop and remove running containers
 docker-stop:
-	docker stop auth-api auth-worker || true
-	docker rm auth-api auth-worker || true
+	-docker stop auth-api auth-worker
+	-docker rm auth-api auth-worker
 
 # Remove old Docker images
 docker-clean: docker-stop
-	docker rmi auth-api auth-worker || true
+	-docker rmi auth-api auth-worker
 
 # Start MongoDB locally (if needed)
 start-mongodb:
-	$(MONGODB_START)
+ifeq ($(OS),Windows_NT)
+	powershell -ExecutionPolicy Bypass -File $(MONGODB_START)
+else
+	chmod +x $(MONGODB_START)
+	./$(MONGODB_START)
+endif

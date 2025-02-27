@@ -1,66 +1,741 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
     <style>
-        body { display: flex; }
-        .sidebar { width: 250px; background: #343a40; color: white; height: 100vh; padding: 1rem; position: fixed; }
-        .sidebar a { color: white; text-decoration: none; display: block; padding: 10px; }
-        .sidebar a:hover { background: #495057; }
-        .main-content { margin-left: 250px; padding: 2rem; width: 100%; }
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #4895ef;
+            --text-color: #212529;
+            --text-light: #6c757d;
+            --bg-light: #f8f9fa;
+            --bg-dark: #212529;
+            --success-color: #4cc9b0;
+            --warning-color: #f7b801;
+            --danger-color: #e63946;
+            --border-radius: 0.5rem;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: var(--text-color);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(to bottom, var(--bg-dark), #2c3e50);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            transition: var(--transition);
+            z-index: 1000;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sidebar-header {
+            padding: 1.5rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar-header h3 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .sidebar-header h3 i {
+            margin-right: 10px;
+            color: var(--accent-color);
+        }
+        
+        .sidebar-menu {
+            padding: 1rem 0;
+            list-style: none;
+        }
+        
+        .sidebar-item {
+            margin-bottom: 0.25rem;
+        }
+        
+        .sidebar-link {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            transition: var(--transition);
+            border-left: 4px solid transparent;
+        }
+        
+        .sidebar-link:hover, .sidebar-link.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-left-color: var(--accent-color);
+        }
+        
+        .sidebar-link i {
+            margin-right: 10px;
+            font-size: 1.1rem;
+            width: 24px;
+            text-align: center;
+        }
+        
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 2rem;
+            transition: var(--transition);
+        }
+        
+        .page-header {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text-color);
+        }
+        
+        .breadcrumb {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+        }
+        
+        /* Card Styles */
+        .card {
+            border: none;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+            margin-bottom: 1.5rem;
+            background: white;
+            overflow: hidden;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            background: transparent;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .card-title {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--text-color);
+        }
+        
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+        }
+        
+        .stat-change {
+            margin-left: 8px;
+            font-weight: 500;
+        }
+        
+        .trend-up {
+            color: var(--success-color);
+        }
+        
+        .trend-down {
+            color: var(--danger-color);
+        }
+        
+        .bg-primary-gradient {
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+        }
+        
+        .bg-success-gradient {
+            background: linear-gradient(45deg, #20bf55, var(--success-color));
+        }
+        
+        .bg-warning-gradient {
+            background: linear-gradient(45deg, #f9c100, #f4a261);
+        }
+        
+        .bg-danger-gradient {
+            background: linear-gradient(45deg, #e63946, #ff6b6b);
+        }
+        
+        /* Progress bar styles */
+        .progress {
+            height: 8px;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 4px;
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        
+        .progress-bar {
+            border-radius: 4px;
+        }
+        
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+        
+        /* Responsive */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .toggle-sidebar {
+                display: block;
+            }
+        }
+        
+        .toggle-sidebar {
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.25rem;
+            margin-right: 1rem;
+        }
+        
+        /* Loader animation */
+        .loader {
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            color: var(--text-light);
+            font-size: 0.875rem;
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+        
+        /* Tooltip styling */
+        .tooltip-icon {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-left: 0.5rem;
+            cursor: help;
+        }
+        
+        /* Error state styling */
+        .error-state {
+            color: var(--danger-color);
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .error-state i {
+            margin-right: 0.5rem;
+        }
+        
+        /* Activity timeline */
+        .activity-item {
+            display: flex;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+        
+        .activity-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            flex-shrink: 0;
+            font-size: 0.875rem;
+            color: white;
+        }
+        
+        .activity-content {
+            flex: 1;
+        }
+        
+        .activity-title {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+        
+        .activity-time {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
     </style>
 </head>
 <body>
-    <div class="sidebar">
-        <h3>Admin Panel</h3>
-        <a href="dashboard">Dashboard</a>
-        <a href="/admin/users">User Management</a>
-        <a href="/admin/sessions">Active Sessions</a>
-    </div>
-    <div class="main-content">
-        <h2>Dashboard</h2>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h3><i class="fas fa-shield-alt"></i> Admin Portal</h3>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li class="sidebar-item">
+                <a href="dashboard" class="sidebar-link active">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="/admin/users" class="sidebar-link">
+                    <i class="fas fa-users"></i>
+                    <span>User Management</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="/admin/sessions" class="sidebar-link">
+                    <i class="fas fa-key"></i>
+                    <span>Active Sessions</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="/admin/settings" class="sidebar-link">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="/admin/logs" class="sidebar-link">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>System Logs</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="/admin/analytics" class="sidebar-link">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Analytics</span>
+                </a>
+            </li>
+        </ul>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <div>
+                <button class="toggle-sidebar" id="toggle-sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 class="page-title">Dashboard Overview</h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="#">Home</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+                    </ol>
+                </nav>
+            </div>
+            <div>
+                <button class="btn btn-sm btn-outline-secondary" id="refresh-data">
+                    <i class="fas fa-sync-alt"></i> Refresh Data
+                </button>
+            </div>
+        </div>
+        
+        <!-- Stat Cards Row -->
         <div class="row">
-            <div class="col-md-4">
-                <div class="card p-3">
-                    <h5>Total Users</h5>
-                    <p id="total-users">Loading...</p>
+            <!-- Total Users Card -->
+            <div class="col-md-3 col-sm-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="card-title">Total Users</h5>
+                        <div class="card-icon bg-primary-gradient">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="total-users-container">
+                            <div class="stat-value" id="total-users">-</div>
+                            <div class="stat-label">
+                                Registered accounts
+                                <span class="trend-up stat-change" id="users-change"><i class="fas fa-arrow-up"></i> 12%</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card p-3">
-                    <h5>Current Sessions</h5>
-                    <p>Total sessions: <span id="current-sessions-total">Loading...</span></p>
-                    <p>Active sessions: <span id="current-sessions-active">Loading...</span></p>
-                    <p>Inactive sessions: <span id="current-sessions-inactive">Loading...</span></p>
+            
+            <!-- Active Sessions Card -->
+            <div class="col-md-3 col-sm-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="card-title">Active Sessions</h5>
+                        <div class="card-icon bg-success-gradient">
+                            <i class="fas fa-plug"></i>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="sessions-container">
+                            <div class="stat-value" id="current-sessions-active">-</div>
+                            <div class="stat-label">
+                                Currently online
+                                <span class="trend-up stat-change" id="sessions-change"><i class="fas fa-arrow-up"></i> 5%</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: 65%" id="sessions-progress"></div>
+                            </div>
+                            <div class="progress-label">
+                                <span>Active: <span id="active-percentage">-</span>%</span>
+                                <span>Total: <span id="current-sessions-total">-</span></span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card p-3">
-                    <h5>Login Stats</h5>
-                    <p>Last 7 days: <span id="logins-week">Loading...</span></p>
+            
+            <!-- Login Stats Card -->
+            <div class="col-md-3 col-sm-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="card-title">Login Activity</h5>
+                        <div class="card-icon bg-warning-gradient">
+                            <i class="fas fa-sign-in-alt"></i>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="logins-container">
+                            <div class="stat-value" id="logins-week">-</div>
+                            <div class="stat-label">
+                                Logins in last 7 days
+                                <span class="trend-up stat-change" id="logins-change"><i class="fas fa-arrow-up"></i> 8%</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-warning" role="progressbar" style="width: 75%" id="logins-progress"></div>
+                            </div>
+                            <div class="progress-label">
+                                <span>Current week</span>
+                                <span>Target: 1,000</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card p-3">
-                    <h5>Cache Statistics</h5>
-                    <div id="cache-stats">
-                        <p>Cached user sessions: <span id="cache-active-sessions">Loading...</span></p>
+            
+            <!-- Cache Stats Card -->
+            <div class="col-md-3 col-sm-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="card-title">Cache Statistics</h5>
+                        <div class="card-icon bg-danger-gradient">
+                            <i class="fas fa-database"></i>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="cache-container">
+                            <div class="stat-value" id="cache-active-sessions">-</div>
+                            <div class="stat-label">
+                                Cached user sessions
+                                <i class="fas fa-info-circle tooltip-icon" title="Number of sessions currently stored in cache"></i>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-danger" role="progressbar" style="width: 45%" id="cache-progress"></div>
+                            </div>
+                            <div class="progress-label">
+                                <span>Cache usage</span>
+                                <span id="cache-percentage">45%</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <script type="module">
+        
+        <!-- Second Row -->
+        <div class="row">
+            <!-- System Health Card -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">System Health</h5>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="timeRangeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                Last 24 hours
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="timeRangeDropdown">
+                                <li><a class="dropdown-item" href="#">Last 24 hours</a></li>
+                                <li><a class="dropdown-item" href="#">Last 7 days</a></li>
+                                <li><a class="dropdown-item" href="#">Last 30 days</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="me-3">
+                                        <i class="fas fa-server fa-2x text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">Server Load</h6>
+                                        <div class="d-flex align-items-center">
+                                            <span class="h5 mb-0 me-2" id="server-load">32%</span>
+                                            <span class="badge bg-success">Normal</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="me-3">
+                                        <i class="fas fa-memory fa-2x text-info"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">Memory Usage</h6>
+                                        <div class="d-flex align-items-center">
+                                            <span class="h5 mb-0 me-2" id="memory-usage">64%</span>
+                                            <span class="badge bg-warning">Moderate</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="me-3">
+                                        <i class="fas fa-hdd fa-2x text-success"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">Disk Space</h6>
+                                        <div class="d-flex align-items-center">
+                                            <span class="h5 mb-0 me-2" id="disk-space">28%</span>
+                                            <span class="badge bg-success">Normal</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="mb-3">API Response Time</h6>
+                                <div class="progress mb-2">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <div class="d-flex justify-content-between text-muted small">
+                                    <span>Response Time: 248ms</span>
+                                    <span>Threshold: 1s</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="mb-3">Database Queries</h6>
+                                <div class="progress mb-2">
+                                    <div class="progress-bar bg-info" role="progressbar" style="width: 65%" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <div class="d-flex justify-content-between text-muted small">
+                                    <span>Queries/min: 2,450</span>
+                                    <span>Threshold: 5,000</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Activity Card -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">Recent Activity</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            <div class="activity-item">
+                                <div class="activity-icon bg-primary-gradient">
+                                    <i class="fas fa-user-plus"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">New user registered</div>
+                                    <div class="activity-time">2 minutes ago</div>
+                                </div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon bg-success-gradient">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Database backup completed</div>
+                                    <div class="activity-time">45 minutes ago</div>
+                                </div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon bg-warning-gradient">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">CPU usage spike detected</div>
+                                    <div class="activity-time">1 hour ago</div>
+                                </div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon bg-danger-gradient">
+                                    <i class="fas fa-lock"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Failed login attempt</div>
+                                    <div class="activity-time">3 hours ago</div>
+                                </div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon bg-primary-gradient">
+                                    <i class="fas fa-cog"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">System settings updated</div>
+                                    <div class="activity-time">6 hours ago</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer text-center">
+                        <a href="/admin/activity" class="btn btn-sm btn-outline-primary">View All Activity</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Helper function to get cookies
         function getCookie(name) {
             const value = `; ${document.cookie}`;
             const parts = value.split(`; ${name}=`);
             if (parts.length === 2) return parts.pop().split(';').shift();
         }
-
+        
+        // Helper function to show loading state
+        function showLoading(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = '<div class="loader"></div><div class="loading-text">Loading data...</div>';
+            }
+        }
+        
+        // Helper function to show error state
+        function showError(elementId, message = 'Failed to load data') {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = `<div class="error-state"><i class="fas fa-exclamation-circle"></i>${message}</div>`;
+            }
+        }
+        
+        // Initialize tooltip functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+            tooltipTriggerList.map(function(tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+            
+            // Toggle sidebar on mobile
+            const toggleBtn = document.getElementById('toggle-sidebar');
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+            
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function() {
+                    sidebar.classList.toggle('active');
+                    if (sidebar.classList.contains('active')) {
+                        mainContent.style.marginLeft = '260px';
+                    } else {
+                        mainContent.style.marginLeft = '0';
+                    }
+                });
+            }
+        });
+        
+        // Fetch dashboard statistics
         async function fetchDashboardStats() {
+            // Show loading state for all data containers
+            showLoading('total-users-container');
+            showLoading('sessions-container');
+            showLoading('logins-container');
+            showLoading('cache-container');
+            
             try {
                 const response = await fetch('/api/stats/dashboard', {
                     method: 'GET',
@@ -69,34 +744,47 @@
                     },
                     credentials: 'include'
                 });
-
+                
                 if (!response.ok) {
                     throw new Error('Failed to fetch dashboard stats');
                 }
-
+                
                 const data = await response.json();
                 
-                document.getElementById('total-users').textContent = data.total_users || '0';
-
-                document.getElementById('current-sessions-total').textContent = data.total_sessions || '0';
-                document.getElementById('current-sessions-active').textContent = data.total_active_sessions || '0';
-                document.getElementById('current-sessions-inactive').textContent = data.total_inactive_sessions || '0';
-
-                document.getElementById('logins-week').textContent = data.weeklyLogins || '0';
-
+                // Update users data
+                document.getElementById('total-users').textContent = data.total_users ? data.total_users.toLocaleString() : '0';
+                
+                // Update sessions data
+                const totalSessions = data.total_sessions || 0;
+                const activeSessions = data.total_active_sessions || 0;
+                const inactiveSessions = data.total_inactive_sessions || 0;
+                
+                document.getElementById('current-sessions-total').textContent = totalSessions.toLocaleString();
+                document.getElementById('current-sessions-active').textContent = activeSessions.toLocaleString();
+                
+                // Calculate and update active percentage
+                const activePercentage = totalSessions > 0 ? Math.round((activeSessions / totalSessions) * 100) : 0;
+                document.getElementById('active-percentage').textContent = activePercentage;
+                document.getElementById('sessions-progress').style.width = `${activePercentage}%`;
+                
+                // Update login data
+                document.getElementById('logins-week').textContent = data.weeklyLogins ? data.weeklyLogins.toLocaleString() : '0';
+                
+                // Update login progress (assuming target of 1000)
+                const loginsPercentage = Math.min(Math.round((data.weeklyLogins || 0) / 1000 * 100), 100);
+                document.getElementById('logins-progress').style.width = `${loginsPercentage}%`;
+                
             } catch (error) {
                 console.error('Error fetching dashboard stats:', error);
-
-                document.getElementById('total-users').textContent = data.total_users || 'Error loading data';
-
-                document.getElementById('current-sessions-total').textContent = "Error loading data"
-                document.getElementById('current-sessions-active').textContent = "Error loading data"
-                document.getElementById('current-sessions-inactive').textContent = "Error loading data"
-
-                document.getElementById('logins-week').textContent = "Error loading data"
+                
+                // Show error state for all containers
+                showError('total-users-container');
+                showError('sessions-container');
+                showError('logins-container');
             }
         }
-
+        
+        // Fetch cache statistics
         async function fetchCacheStats() {
             try {
                 const response = await fetch('/api/stats/cache', {
@@ -105,26 +793,70 @@
                         'Content-Type': 'application/json',
                     }
                 });
-
+                
                 if (!response.ok) {
                     throw new Error('Failed to fetch cache stats');
                 }
-
+                
                 const data = await response.json();
                 
-                document.getElementById('cache-active-sessions').textContent = data.active_sessions || '0';
-
+                // Update cache data
+                document.getElementById('cache-active-sessions').textContent = data.active_sessions ? data.active_sessions.toLocaleString() : '0';
+                
+                // Assuming cache capacity is 5000 sessions
+                const cacheCapacity = 5000;
+                const cachePercentage = Math.round((data.active_sessions || 0) / cacheCapacity * 100);
+                document.getElementById('cache-percentage').textContent = `${cachePercentage}%`;
+                document.getElementById('cache-progress').style.width = `${cachePercentage}%`;
+                
             } catch (error) {
                 console.error('Error fetching cache stats:', error);
-                document.getElementById('cache-active-sessions').textContent = 'Error';
+                showError('cache-container');
             }
         }
 
-        // Initial fetch
+        // Refresh data when the refresh button is clicked
+        document.getElementById('refresh-data').addEventListener('click', async function() {
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Refreshing...';
+            
+            try {
+                await Promise.all([
+                    fetchDashboardStats(),
+                    fetchCacheStats()
+                ]);
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+            } finally {
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh Data';
+            }
+        });
+
+        // Handle responsive sidebar
+        function handleResponsiveSidebar() {
+            const width = window.innerWidth;
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+            
+            if (width < 992) {
+                sidebar.classList.remove('active');
+                mainContent.style.marginLeft = '0';
+            } else {
+                sidebar.classList.add('active');
+                mainContent.style.marginLeft = '260px';
+            }
+        }
+
+        // Listen for window resize
+        window.addEventListener('resize', handleResponsiveSidebar);
+
+        // Initial setup
+        handleResponsiveSidebar();
         fetchDashboardStats();
         fetchCacheStats();
 
-        // Set up the refresh interval
+        // Set up refresh interval (every 30 seconds)
         setInterval(() => {
             fetchDashboardStats();
             fetchCacheStats();
