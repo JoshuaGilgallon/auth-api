@@ -42,10 +42,34 @@ func GetDashboardStats() map[string]interface{} {
 		}
 	}
 
+	weekly_logins, err := repositories.GetLoginCount()
+	if err != nil {
+		return map[string]interface{}{
+			"error": err.Error(),
+		}
+	}
+
+	last_week_logins, err := repositories.GetLastWeekLoginCount()
+	if err != nil {
+		return map[string]interface{}{
+			"error": err.Error(),
+		}
+	}
+
+	trends, err := repositories.GetWeeklyStats()
+	if err != nil {
+		return map[string]interface{}{
+			"error": err.Error(),
+		}
+	}
+
 	return map[string]interface{}{
 		"total_users":             total_users,
 		"total_sessions":          total_sessions,
 		"total_active_sessions":   total_active_sessions,
 		"total_inactive_sessions": total_inactive_sessions,
+		"weekly_logins":           weekly_logins,
+		"last_week_logins":        last_week_logins,
+		"trends":                  trends,
 	}
 }

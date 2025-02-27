@@ -554,8 +554,8 @@
                                     <div>
                                         <h6 class="mb-0">Server Load</h6>
                                         <div class="d-flex align-items-center">
-                                            <span class="h5 mb-0 me-2" id="server-load">32%</span>
-                                            <span class="badge bg-success">Normal</span>
+                                            <span class="h5 mb-0 me-2" id="server-load">N/A</span>
+                                            <!-- <span class="badge bg-success">Normal</span> -->
                                         </div>
                                     </div>
                                 </div>
@@ -568,8 +568,8 @@
                                     <div>
                                         <h6 class="mb-0">Memory Usage</h6>
                                         <div class="d-flex align-items-center">
-                                            <span class="h5 mb-0 me-2" id="memory-usage">64%</span>
-                                            <span class="badge bg-warning">Moderate</span>
+                                            <span class="h5 mb-0 me-2" id="memory-usage">N/A</span>
+                                            <!-- <span class="badge bg-success">Normal</span> -->
                                         </div>
                                     </div>
                                 </div>
@@ -580,7 +580,7 @@
                                         <i class="fas fa-hdd fa-2x text-success"></i>
                                     </div>
                                     <div>
-                                        <h6 class="mb-0">Disk Space</h6>
+                                        <h6 class="mb-0">Database Limit Usage</h6>
                                         <div class="d-flex align-items-center">
                                             <span class="h5 mb-0 me-2" id="disk-space">28%</span>
                                             <span class="badge bg-success">Normal</span>
@@ -616,7 +616,7 @@
                 </div>
             </div>
             
-            <!-- Recent Activity Card -->
+            <!-- Recent Activity Card
             <div class="col-lg-4">
                 <div class="card">
                     <div class="card-header">
@@ -675,7 +675,7 @@
                         <a href="/admin/activity" class="btn btn-sm btn-outline-primary">View All Activity</a>
                     </div>
                 </div>
-            </div>
+            </div> -->
         </div>
     </main>
     
@@ -753,11 +753,11 @@
                 
                 // Update users data
                 document.getElementById('total-users').textContent = data.total_users ? data.total_users.toLocaleString() : '0';
+                document.getElementById('users-change').innerHTML = `<i class="fas fa-arrow-up"></i> ${data.trends.users_change}%`;
                 
                 // Update sessions data
                 const totalSessions = data.total_sessions || 0;
                 const activeSessions = data.total_active_sessions || 0;
-                const inactiveSessions = data.total_inactive_sessions || 0;
                 
                 document.getElementById('current-sessions-total').textContent = totalSessions.toLocaleString();
                 document.getElementById('current-sessions-active').textContent = activeSessions.toLocaleString();

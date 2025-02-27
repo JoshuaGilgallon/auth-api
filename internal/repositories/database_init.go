@@ -41,6 +41,8 @@ func InitDatabase(config *internalconfig.DatabaseConfig) error {
 
 	SetAdminCollection(db.Collection("admins"))
 
+	SetStatsCollection(db.Collection("stats"))
+
 	return nil
 }
 
