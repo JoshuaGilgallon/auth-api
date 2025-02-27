@@ -3,6 +3,7 @@ package repositories
 import (
 	"auth-api/internal/models"
 	"context"
+	"log"
 	"time"
 
 	"github.com/pkg/errors"
@@ -14,7 +15,7 @@ import (
 
 var sessionCollection *mongo.Collection
 
-// SetSessionCollection initializes the session collection and creates necessary indexes
+// SetSessionCollection initialises the session collection and creates necessary indexes
 func SetSessionCollection(collection *mongo.Collection) error {
 	sessionCollection = collection
 	return createSessionIndexes()
@@ -130,4 +131,27 @@ func GetTotalInactiveSessions() (int64, error) {
 	}
 
 	return count, nil
+}
+
+func DeleteInvalidSessions() error {
+	if sessionCollection == nil {
+		log.Println("sessionCollection is not initialized")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{
+		"$or": []bson.M{
+			{"access_expires_at": bson.M{"$lt": time.Now()}},
+			{"refresh_expires_at": bson.M{"$lt": time.Now()}},
+		},
+	}
+
+	_, err := sessionCollection.DeleteMany(ctx, filter)
+	if err != nil {
+		return errors.Wrap(err, "failed to delete invalid sessions")
+	}
+
+	return nil
 }

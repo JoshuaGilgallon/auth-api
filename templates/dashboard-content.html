@@ -76,13 +76,13 @@
 
                 const data = await response.json();
                 
-                document.getElementById('total-users').textContent = data.total_users || 'Error loading data';
+                document.getElementById('total-users').textContent = data.total_users || '0';
 
-                document.getElementById('current-sessions-total').textContent = data.total_sessions || 'Error loading data';
-                document.getElementById('current-sessions-active').textContent = data.total_active_sessions || 'Error loading data';
-                document.getElementById('current-sessions-inactive').textContent = data.total_inactive_sessions || 'Error loading data';
+                document.getElementById('current-sessions-total').textContent = data.total_sessions || '0';
+                document.getElementById('current-sessions-active').textContent = data.total_active_sessions || '0';
+                document.getElementById('current-sessions-inactive').textContent = data.total_inactive_sessions || '0';
 
-                document.getElementById('logins-week').textContent = data.weeklyLogins || 'Error loading data';
+                document.getElementById('logins-week').textContent = data.weeklyLogins || '0';
 
             } catch (error) {
                 console.error('Error fetching dashboard stats:', error);

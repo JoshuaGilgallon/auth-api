@@ -1,16 +1,15 @@
-// cmd/api/main.go
 package main
 
 import (
-    "auth-api/docs"
-    internalconfig "auth-api/internal/config"
-    "auth-api/internal/repositories"
-    "auth-api/internal/server"
-    "log"
+	"auth-api/docs"
+	internalconfig "auth-api/internal/config"
+	"auth-api/internal/repositories"
+	"auth-api/internal/server"
+	"log"
 
-    "github.com/joho/godotenv"
-    swaggerFiles "github.com/swaggo/files"
-    ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/joho/godotenv"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // @title Auth API
@@ -22,31 +21,31 @@ import (
 // @in header
 // @name Authorization
 func main() {
-    // Load .env file
-    if err := godotenv.Load(); err != nil {
-        log.Fatal("Error loading .env file")
-    }
+	// Load .env file
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("Error loading .env file")
+	}
 
-    // Initialize Swagger docs
-    docs.SwaggerInfo.Title = "Auth API"
-    docs.SwaggerInfo.Description = "Authentication and Authorization API"
-    docs.SwaggerInfo.Version = "Beta 1.2"
-    docs.SwaggerInfo.Host = "localhost:8080"
-    docs.SwaggerInfo.BasePath = "/"
-    docs.SwaggerInfo.Schemes = []string{"http", "https"}
+	// Initialize Swagger docs
+	docs.SwaggerInfo.Title = "Auth API"
+	docs.SwaggerInfo.Description = "Authentication and Authorization API"
+	docs.SwaggerInfo.Version = "Beta 1.2"
+	docs.SwaggerInfo.Host = "localhost:8080"
+	docs.SwaggerInfo.BasePath = "/"
+	docs.SwaggerInfo.Schemes = []string{"http", "https"}
 
-    // Initialize the database
-    dbConfig := internalconfig.NewDatabaseConfig()
-    if err := repositories.InitDatabase(dbConfig); err != nil {
-        log.Fatalf("Failed to connect to database: %v", err)
-    }
-    defer repositories.CloseDatabase()
+	// Initialize the database
+	dbConfig := internalconfig.NewDatabaseConfig()
+	if err := repositories.InitDatabase(dbConfig); err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer repositories.CloseDatabase()
 
-    // Initialize and start the API server
-    r := server.SetupRouter()
-    r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-    r.SetTrustedProxies(nil)
+	// Initialize and start the API server
+	r := server.SetupRouter()
+	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	r.SetTrustedProxies(nil)
 
-    log.Println("Starting server on port 8080...")
-    r.Run(":8080")
+	log.Println("Starting server on port 8080...")
+	r.Run(":8080")
 }

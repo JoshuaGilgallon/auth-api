@@ -32,7 +32,7 @@ func InitDatabase(config *internalconfig.DatabaseConfig) error {
 
 	// Initialize collections
 	db := client.Database(config.DatabaseName)
-    
+
 	if err := SetSessionCollection(db.Collection("sessions")); err != nil {
 		return err
 	}
@@ -40,8 +40,6 @@ func InitDatabase(config *internalconfig.DatabaseConfig) error {
 	SetUserCollection(db.Collection("users"))
 
 	SetAdminCollection(db.Collection("admins"))
-
-	SetAdminSessionCollection(db.Collection("admin_sessions"))
 
 	return nil
 }

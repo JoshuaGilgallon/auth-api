@@ -1,0 +1,20 @@
+# Use official Go image
+FROM golang:1.22.4-alpine
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Install dependencies (Make, Swag, MongoDB tools)
+RUN apk add --no-cache make git
+
+# Copy everything into the container
+COPY . .
+
+# Install Go dependencies
+RUN go mod tidy
+
+# Build the worker
+RUN go build -o bin/worker ./cmd/worker/main.go
+
+# Start the worker when the container runs
+CMD ["./bin/worker"]

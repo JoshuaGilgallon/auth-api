@@ -49,10 +49,34 @@ func GetCacheStats(c *gin.Context) {
 
 	_, err = services.ValidateAdminAccessToken(token)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err)
+		c.JSON(http.StatusUnauthorized, err)
 		return
 	}
 
 	stats := services.GetCacheStats()
 	c.JSON(http.StatusOK, stats)
+}
+
+// @Summary Get next session purge time
+// @Description Get the specific time that the next invalid session purge will occur
+// @Tags stats
+// @Accept json
+// @Produce json
+// @Success 200 {object} string "time"
+// @Router /api/stats/purge [get]
+func GetNextPurgeTime(c *gin.Context) {
+	token, err := c.Cookie("admin_token")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid authorisation"})
+		return
+	}
+
+	_, err = services.ValidateAdminAccessToken(token)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, err)
+		return
+	}
+
+	purge_time := services.NextPurgeTime()
+	c.JSON(http.StatusOK, purge_time)
 }
