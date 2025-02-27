@@ -12,14 +12,14 @@
 This is an **Authorization API** template that I use as a starting point for all my projects. It provides a production-ready authentication system built with **Golang** using the **Gin** framework. Feel free to use and customize it for your projects.
 
 ### Features
-- **User Management**
-- **Session Management**
+- **User and Session Management**
+- **Built in Admin Dashboard with Analytics and Statistics**
 - **MongoDB Integrated** and already setup
 - **Salted Password Hashing**
-- **User Data AES-256 Encryption**
-- **Multi-Factor Authentication (MFA)** via Email, SMS, and Authenticator Apps
-- **Rate Limiting & Brute Force Protection**
-- **Swagger Documentation** (Accessible at `/docs/index.html`)
+- **User Data AES-256 Encryption** supplied but optional, turned off by default.
+- **Multi-Factor Authentication (MFA) Support** via Email, SMS, and Authenticator Apps
+- **Rate Limiting & Brute Force Protection** plus a lot of other security precautions
+- **Swagger Documentation for Debugging** (Accessible at `/docs/index.html`)
 - **and much much more!**
 
 ---
@@ -33,6 +33,9 @@ Here are some important points you need to consider/know when using this templat
 
 ### MongoDB setup
 The API is currently set up to recieve requests from either a local MongoDB database instance or a remote one. Running it locally will require further installation and setup from the official MongoDB site. If you are using it remotely, for example Atlas, copy and paste your URI into the .env file (you may need to create one, the instruction for how to set it up is in the installation section. Docker will NOT install MongoDB, therefore you either need to download it yourself or create a remote instance.
+
+### Debug mode
+The API is set to debug mode by default and will need to be manually configured and removed before pushing to production.
 
 ---
 
@@ -61,11 +64,19 @@ For the ROOT ADMIN user section; this will be the account that you log in to tha
 ### Quick Start
 
 ```sh
-# Build the docker image
+# Build the docker images
 make -f deploy/Makefile docker-build
 
-# Run the docker image
+# Run the docker images
 make -f deploy/Makefile docker-run
+```
+
+This will run the worker process in the background, and start running the main API process in the current terminal.
+
+To view the logs for the worker process, go to a different terminal and run:
+
+```sh
+docker logs -f auth-worker
 ```
 
 ---
@@ -80,13 +91,13 @@ When a user is created the following will happen:
 
 1. **Endpoint Called**
 2. **User Password Hashed**
-3. **User Email and Phone number encrypted with AES-256**
+3. **User Email and Phone number encrypted with AES-256** - optional
 4. **Information sent to database for storage**
 
 When a user is fetched the following will happen
 
 1. **Endpoint Called**
-2. **User Email and Phone Number decrypted with AES-256**
+2. **User Email and Phone Number decrypted with AES-256** - again optional
 3. **Information displayed** 
 
 ---
