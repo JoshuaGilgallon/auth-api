@@ -25,43 +25,47 @@
         <div class="row">
             <div class="col-md-4">
                 <div class="card p-3">
-                    <h5>Active Users</h5>
-                    <p id="active-users">Loading...</p>
+                    <h5>Total Users</h5>
+                    <p id="total-users">Loading...</p>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="card p-3">
                     <h5>Current Sessions</h5>
-                    <p id="current-sessions">Loading...</p>
+                    <p>Total sessions: <span id="current-sessions-total">Loading...</span></p>
+                    <p>Active sessions: <span id="current-sessions-active">Loading...</span></p>
+                    <p>Inactive sessions: <span id="current-sessions-inactive">Loading...</span></p>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="card p-3">
-                    <h5>Logins (Last 7 days)</h5>
-                    <p id="logins-week">Loading...</p>
+                    <h5>Login Stats</h5>
+                    <p>Last 7 days: <span id="logins-week">Loading...</span></p>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="card p-3">
                     <h5>Cache Statistics</h5>
                     <div id="cache-stats">
-                        <p>Hits: <span id="cache-hits">Loading...</span></p>
-                        <p>Misses: <span id="cache-misses">Loading...</span></p>
-                        <p>Total Keys: <span id="cache-keys">Loading...</span></p>
+                        <p>Cached user sessions: <span id="cache-active-sessions">Loading...</span></p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <script type="module">
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
         async function fetchDashboardStats() {
             try {
-                const token = sessionStorage.getItem('adminToken');
-                const response = await fetch('/api/admin/dashboard-stats', {
+                const response = await fetch('/api/stats/dashboard', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': token
                     },
                     credentials: 'include'
                 });
@@ -72,26 +76,33 @@
 
                 const data = await response.json();
                 
-                document.getElementById('active-users').textContent = data.activeUsers || '0';
-                document.getElementById('current-sessions').textContent = data.activeSessions || '0';
-                document.getElementById('logins-week').textContent = data.weeklyLogins || '0';
+                document.getElementById('total-users').textContent = data.total_users || 'Error loading data';
+
+                document.getElementById('current-sessions-total').textContent = data.total_sessions || 'Error loading data';
+                document.getElementById('current-sessions-active').textContent = data.total_active_sessions || 'Error loading data';
+                document.getElementById('current-sessions-inactive').textContent = data.total_inactive_sessions || 'Error loading data';
+
+                document.getElementById('logins-week').textContent = data.weeklyLogins || 'Error loading data';
 
             } catch (error) {
                 console.error('Error fetching dashboard stats:', error);
-                document.getElementById('active-users').textContent = 'Error loading data';
-                document.getElementById('current-sessions').textContent = 'Error loading data';
-                document.getElementById('logins-week').textContent = 'Error loading data';
+
+                document.getElementById('total-users').textContent = data.total_users || 'Error loading data';
+
+                document.getElementById('current-sessions-total').textContent = "Error loading data"
+                document.getElementById('current-sessions-active').textContent = "Error loading data"
+                document.getElementById('current-sessions-inactive').textContent = "Error loading data"
+
+                document.getElementById('logins-week').textContent = "Error loading data"
             }
         }
 
         async function fetchCacheStats() {
             try {
-                const token = sessionStorage.getItem('adminToken');
-                const response = await fetch('/api/session/cache', {
+                const response = await fetch('/api/stats/cache', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': token
                     }
                 });
 
@@ -101,15 +112,11 @@
 
                 const data = await response.json();
                 
-                document.getElementById('cache-hits').textContent = data.hits || '0';
-                document.getElementById('cache-misses').textContent = data.misses || '0';
-                document.getElementById('cache-keys').textContent = data.keys || '0';
+                document.getElementById('cache-active-sessions').textContent = data.active_sessions || '0';
 
             } catch (error) {
                 console.error('Error fetching cache stats:', error);
-                document.getElementById('cache-hits').textContent = 'Error';
-                document.getElementById('cache-misses').textContent = 'Error';
-                document.getElementById('cache-keys').textContent = 'Error';
+                document.getElementById('cache-active-sessions').textContent = 'Error';
             }
         }
 

@@ -160,3 +160,15 @@ func GetUsersByTimeUpdatedRange(startTime, endTime time.Time) ([]models.User, er
 
 	return users, nil
 }
+
+func GetTotalUsers() (int64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	count, err := userCollection.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}

@@ -327,11 +327,3 @@ func InvalidateSessionByToken(token string) error {
 	return errors.NewSessionNotFoundError("invalid or expired session", nil)
 }
 
-func GetCacheStats() map[string]interface{} {
-	cacheMutex.RLock()
-	defer cacheMutex.RUnlock()
-
-	return map[string]interface{}{
-		"active_sessions": len(sessionCache),
-	}
-}

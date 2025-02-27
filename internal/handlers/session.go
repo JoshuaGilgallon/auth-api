@@ -191,28 +191,5 @@ func InvalidateSession(c *gin.Context) {
 		return
 	}
 
-	log.Printf("Session invalidated successfully")
 	c.JSON(http.StatusOK, gin.H{"message": "Session invalidated"})
-}
-
-// ADMIN ENDPOINTS
-
-// @Summary Get Session Cache Stats
-// @Description Returns information about the session cache
-// @Tags sessions
-// @Accept json
-// @Produce json
-// @Param authorization header string true "Bearer <token>"
-// @Success 200 {object} string "cache stats"
-// @Router /api/session/cache [get]
-func GetCacheStats(c *gin.Context) {
-	// Verify admin session first
-	adminSession, err := validateAdminSession(c)
-	if err != nil {
-		return
-	}
-
-	log.Printf("Cache stats requested by admin: %s", adminSession.AdminID)
-	stats := services.GetCacheStats()
-	c.JSON(http.StatusOK, stats)
 }

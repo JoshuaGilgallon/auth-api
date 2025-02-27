@@ -47,6 +47,11 @@ func SetupRouter() *gin.Engine {
 			admin.POST("/create", handlers.CreateAdminAccount)
 			admin.GET("/validate", handlers.ValidateAdminSession)
 		}
+		stats := api.Group("/stats")
+		{
+			stats.GET("/cache", handlers.GetCacheStats)
+			stats.GET("/dashboard", handlers.GetDashboardStats)
+		}
 	}
 
 	// Admin web routes
