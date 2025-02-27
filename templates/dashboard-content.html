@@ -347,6 +347,15 @@
             font-size: 0.75rem;
             color: var(--text-light);
         }
+        
+        .row.g-3 {
+            --bs-gutter-y: 1rem;
+        }
+        
+        .card {
+            height: 100%;
+            margin-bottom: 0;
+        }
     </style>
 </head>
 <body>
@@ -419,7 +428,7 @@
         </div>
         
         <!-- Stat Cards Row -->
-        <div class="row">
+        <div class="row g-3 mb-4">
             <!-- Total Users Card -->
             <div class="col-md-3 col-sm-6">
                 <div class="card h-100">
@@ -527,10 +536,10 @@
         </div>
         
         <!-- Second Row -->
-        <div class="row">
+        <div class="row g-3">
             <!-- System Health Card -->
             <div class="col-lg-8">
-                <div class="card">
+                <div class="card h-100">
                     <div class="card-header">
                         <h5 class="card-title">System Health</h5>
                         <div class="dropdown">
@@ -730,11 +739,9 @@
         
         // Fetch dashboard statistics
         async function fetchDashboardStats() {
-            // Show loading state for all data containers
             showLoading('total-users-container');
             showLoading('sessions-container');
             showLoading('logins-container');
-            showLoading('cache-container');
             
             try {
                 const response = await fetch('/api/stats/dashboard', {
@@ -751,33 +758,59 @@
                 
                 const data = await response.json();
                 
-                // Update users data
-                document.getElementById('total-users').textContent = data.total_users ? data.total_users.toLocaleString() : '0';
-                document.getElementById('users-change').innerHTML = `<i class="fas fa-arrow-up"></i> ${data.trends.users_change}%`;
+                // Update users container
+                const usersContainer = document.getElementById('total-users-container');
+                usersContainer.innerHTML = `
+                    <div class="stat-value" id="total-users">${data.total_users.toLocaleString()}</div>
+                    <div class="stat-label">
+                        Registered accounts
+                        <span class="${data.trends.users_change >= 0 ? 'trend-up' : 'trend-down'} stat-change">
+                            <i class="fas fa-arrow-${data.trends.users_change >= 0 ? 'up' : 'down'}"></i> 
+                            ${Math.abs(data.trends.users_change)}%
+                        </span>
+                    </div>
+                `;
                 
-                // Update sessions data
-                const totalSessions = data.total_sessions || 0;
-                const activeSessions = data.total_active_sessions || 0;
+                // Update sessions container
+                const sessionsContainer = document.getElementById('sessions-container');
+                const activePercentage = data.total_sessions > 0 ? Math.round((data.total_active_sessions / data.total_sessions) * 100) : 0;
+                sessionsContainer.innerHTML = `
+                    <div class="stat-value" id="current-sessions-active">${data.total_active_sessions.toLocaleString()}</div>
+                    <div class="stat-label">
+                        Currently online
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: ${activePercentage}%"></div>
+                    </div>
+                    <div class="progress-label">
+                        <span>Active: ${activePercentage}%</span>
+                        <span>Total: ${data.total_sessions.toLocaleString()}</span>
+                    </div>
+                `;
                 
-                document.getElementById('current-sessions-total').textContent = totalSessions.toLocaleString();
-                document.getElementById('current-sessions-active').textContent = activeSessions.toLocaleString();
-                
-                // Calculate and update active percentage
-                const activePercentage = totalSessions > 0 ? Math.round((activeSessions / totalSessions) * 100) : 0;
-                document.getElementById('active-percentage').textContent = activePercentage;
-                document.getElementById('sessions-progress').style.width = `${activePercentage}%`;
-                
-                // Update login data
-                document.getElementById('logins-week').textContent = data.weeklyLogins ? data.weeklyLogins.toLocaleString() : '0';
-                
-                // Update login progress (assuming target of 1000)
-                const loginsPercentage = Math.min(Math.round((data.weeklyLogins || 0) / 1000 * 100), 100);
-                document.getElementById('logins-progress').style.width = `${loginsPercentage}%`;
+                // Update logins container
+                const loginsContainer = document.getElementById('logins-container');
+                const loginsPercentage = Math.min(Math.round((data.weekly_logins || 0) / 1000 * 100), 100);
+                loginsContainer.innerHTML = `
+                    <div class="stat-value" id="logins-week">${data.weekly_logins.toLocaleString()}</div>
+                    <div class="stat-label">
+                        Logins in last 7 days
+                        <span class="${data.trends.logins_change >= 0 ? 'trend-up' : 'trend-down'} stat-change">
+                            <i class="fas fa-arrow-${data.trends.logins_change >= 0 ? 'up' : 'down'}"></i> 
+                            ${Math.abs(data.trends.logins_change)}%
+                        </span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: ${loginsPercentage}%"></div>
+                    </div>
+                    <div class="progress-label">
+                        <span>Current week</span>
+                        <span>Target: 1,000</span>
+                    </div>
+                `;
                 
             } catch (error) {
                 console.error('Error fetching dashboard stats:', error);
-                
-                // Show error state for all containers
                 showError('total-users-container');
                 showError('sessions-container');
                 showError('logins-container');
@@ -786,6 +819,8 @@
         
         // Fetch cache statistics
         async function fetchCacheStats() {
+            showLoading('cache-container');
+            
             try {
                 const response = await fetch('/api/stats/cache', {
                     method: 'GET',
@@ -800,14 +835,29 @@
                 
                 const data = await response.json();
                 
-                // Update cache data
-                document.getElementById('cache-active-sessions').textContent = data.active_sessions ? data.active_sessions.toLocaleString() : '0';
-                
-                // Assuming cache capacity is 5000 sessions
+                // Update cache container
+                const cacheContainer = document.getElementById('cache-container');
                 const cacheCapacity = 5000;
                 const cachePercentage = Math.round((data.active_sessions || 0) / cacheCapacity * 100);
-                document.getElementById('cache-percentage').textContent = `${cachePercentage}%`;
-                document.getElementById('cache-progress').style.width = `${cachePercentage}%`;
+                
+                cacheContainer.innerHTML = `
+                    <div class="stat-value" id="cache-active-sessions">${data.active_sessions.toLocaleString()}</div>
+                    <div class="stat-label">
+                        Cached user sessions
+                        <i class="fas fa-info-circle tooltip-icon" title="Number of sessions currently stored in cache"></i>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-danger" role="progressbar" style="width: ${cachePercentage}%"></div>
+                    </div>
+                    <div class="progress-label">
+                        <span>Cache usage</span>
+                        <span>${cachePercentage}%</span>
+                    </div>
+                `;
+                
+                // Reinitialize tooltips
+                const tooltips = [].slice.call(document.querySelectorAll('[title]'));
+                tooltips.map(el => new bootstrap.Tooltip(el));
                 
             } catch (error) {
                 console.error('Error fetching cache stats:', error);
