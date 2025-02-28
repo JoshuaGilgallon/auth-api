@@ -10,6 +10,12 @@ import (
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
+	// Update static file serving to match the URL path
+	r.Static("/internal/static", "./internal/static")
+
+	// Enable debug mode to see more detailed logs
+	gin.SetMode(gin.DebugMode)
+
 	// Load HTML templates
 	r.LoadHTMLGlob("templates/*")
 
