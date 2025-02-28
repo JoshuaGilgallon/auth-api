@@ -46,8 +46,65 @@
             height: 100vh;
             position: fixed;
             transition: var(--transition);
-            z-index: 1000;
+            z-index: 1050;
             box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1040;
+            transition: var(--transition);
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .close-sidebar {
+            display: none;
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.25rem;
+            transition: var(--transition);
+        }
+
+        .close-sidebar:hover {
+            color: white;
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+                left: 0;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0 !important;
+                width: 100%;
+                overflow-x: hidden;
+            }
+
+            .close-sidebar {
+                display: block;
+            }
         }
         
         .sidebar-header {
@@ -242,6 +299,7 @@
         @media (max-width: 992px) {
             .sidebar {
                 transform: translateX(-100%);
+                z-index: 1050;
             }
             
             .sidebar.active {
@@ -250,22 +308,35 @@
             
             .main-content {
                 margin-left: 0;
-            }
-            
-            .toggle-sidebar {
-                display: block;
+                width: 100%;
             }
         }
         
         .toggle-sidebar {
             display: none;
-            background: transparent;
+            background: var(--primary-color);
             border: none;
-            color: var(--text-color);
+            color: white;
             font-size: 1.5rem;
             cursor: pointer;
-            padding: 0.25rem;
-            margin-right: 1rem;
+            padding: 1rem;
+            border-radius: 50%;
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 1060;
+            width: 3.5rem;
+            height: 3.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            transition: var(--transition);
+        }
+
+        @media (max-width: 992px) {
+            .toggle-sidebar {
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+            }
         }
         
         /* Loader animation */
@@ -293,7 +364,7 @@
         /* Tooltip styling */
         .tooltip-icon {
             font-size: 0.875rem;
-            color: var(--text-light);
+            color: var (--text-light);
             margin-left: 0.5rem;
             cursor: help;
         }
@@ -359,8 +430,14 @@
     </style>
 </head>
 <body>
+    <!-- Overlay for mobile sidebar -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
     <!-- Sidebar -->
     <aside class="sidebar">
+        <button class="close-sidebar" id="close-sidebar">
+            <i class="fas fa-times"></i>
+        </button>
         <div class="sidebar-header">
             <h3><i class="fas fa-shield-alt"></i> Admin Portal</h3>
         </div>
@@ -409,9 +486,6 @@
     <main class="main-content">
         <div class="page-header">
             <div>
-                <button class="toggle-sidebar" id="toggle-sidebar">
-                    <i class="fas fa-bars"></i>
-                </button>
                 <h1 class="page-title">Dashboard Overview</h1>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb">
@@ -426,6 +500,11 @@
                 </button>
             </div>
         </div>
+
+        <!-- Move the toggle button outside the header -->
+        <button class="toggle-sidebar" id="toggle-sidebar">
+            <i class="fas fa-bars"></i>
+        </button>
         
         <!-- Stat Cards Row -->
         <div class="row g-3 mb-4">
@@ -722,18 +801,33 @@
             
             // Toggle sidebar on mobile
             const toggleBtn = document.getElementById('toggle-sidebar');
+            const closeBtn = document.getElementById('close-sidebar');
             const sidebar = document.querySelector('.sidebar');
             const mainContent = document.querySelector('.main-content');
+            const overlay = document.getElementById('sidebar-overlay');
+            
+            function closeSidebar() {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            function openSidebar() {
+                sidebar.classList.add('active');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
             
             if (toggleBtn) {
-                toggleBtn.addEventListener('click', function() {
-                    sidebar.classList.toggle('active');
-                    if (sidebar.classList.contains('active')) {
-                        mainContent.style.marginLeft = '260px';
-                    } else {
-                        mainContent.style.marginLeft = '0';
-                    }
-                });
+                toggleBtn.addEventListener('click', openSidebar);
+            }
+
+            if (closeBtn) {
+                closeBtn.addEventListener('click', closeSidebar);
+            }
+
+            if (overlay) {
+                overlay.addEventListener('click', closeSidebar);
             }
         });
         
