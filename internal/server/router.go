@@ -10,14 +10,21 @@ import (
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
-	// Update static file serving to match the URL path
+	// Serve static files
 	r.Static("/internal/static", "./internal/static")
+
+	// Load templates in the correct order - base templates first, then pages
+	r.LoadHTMLFiles(
+		"templates/partials/sidebar.html",
+		"templates/dashboard-content.html",
+		"templates/users.html",
+		"templates/sessions.html",
+		"templates/admin_login.html",
+		"templates/auth-check.html",
+	)
 
 	// Enable debug mode to see more detailed logs
 	gin.SetMode(gin.DebugMode)
-
-	// Load HTML templates
-	r.LoadHTMLGlob("templates/*")
 
 	// Health check
 	r.GET("/health", handlers.HealthCheck)
@@ -70,7 +77,10 @@ func SetupRouter() *gin.Engine {
 			c.HTML(http.StatusOK, "auth-check.html", gin.H{})
 		})
 		admin.GET("/dashboard/content", func(c *gin.Context) {
-			c.HTML(http.StatusOK, "dashboard-content.html", gin.H{"title": "Dashboard"})
+			c.HTML(http.StatusOK, "dashboard-content.html", gin.H{
+				"title":  "Dashboard",
+				"active": "dashboard", // This will highlight the current page in sidebar
+			})
 		})
 		admin.GET("/users", func(c *gin.Context) {
 			c.HTML(http.StatusOK, "users.html", gin.H{"title": "User Management"})

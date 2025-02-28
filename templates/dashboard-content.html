@@ -16,54 +16,8 @@
     <!-- Overlay for mobile sidebar -->
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <button class="close-sidebar" id="close-sidebar">
-            <i class="fas fa-times"></i>
-        </button>
-        <div class="sidebar-header">
-            <h3><i class="fas fa-shield-alt"></i> Admin Portal</h3>
-        </div>
-        
-        <ul class="sidebar-menu">
-            <li class="sidebar-item">
-                <a href="dashboard" class="sidebar-link active">
-                    <i class="fas fa-tachometer-alt"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <li class="sidebar-item">
-                <a href="/admin/users" class="sidebar-link">
-                    <i class="fas fa-users"></i>
-                    <span>User Management</span>
-                </a>
-            </li>
-            <li class="sidebar-item">
-                <a href="/admin/sessions" class="sidebar-link">
-                    <i class="fas fa-key"></i>
-                    <span>Active Sessions</span>
-                </a>
-            </li>
-            <li class="sidebar-item">
-                <a href="/admin/settings" class="sidebar-link">
-                    <i class="fas fa-cog"></i>
-                    <span>Settings</span>
-                </a>
-            </li>
-            <li class="sidebar-item">
-                <a href="/admin/logs" class="sidebar-link">
-                    <i class="fas fa-clipboard-list"></i>
-                    <span>System Logs</span>
-                </a>
-            </li>
-            <li class="sidebar-item">
-                <a href="/admin/analytics" class="sidebar-link">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Analytics</span>
-                </a>
-            </li>
-        </ul>
-    </aside>
+    <!-- Include the sidebar -->
+    {{ template "sidebar" . }}
     
     <!-- Main Content -->
     <main class="main-content">
