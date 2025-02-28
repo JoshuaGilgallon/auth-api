@@ -83,10 +83,16 @@ func SetupRouter() *gin.Engine {
 			})
 		})
 		admin.GET("/users", func(c *gin.Context) {
-			c.HTML(http.StatusOK, "users.html", gin.H{"title": "User Management"})
+			c.HTML(http.StatusOK, "users.html", gin.H{
+				"title":  "User Management",
+				"active": "users", // This will highlight the users tab in sidebar
+			})
 		})
 		admin.GET("/sessions", func(c *gin.Context) {
-			c.HTML(http.StatusOK, "sessions.html", gin.H{"title": "Active Sessions"})
+			c.HTML(http.StatusOK, "sessions.html", gin.H{
+				"title":  "Active Sessions",
+				"active": "sessions", // This will highlight the sessions tab in sidebar
+			})
 		})
 	}
 
