@@ -35,14 +35,6 @@ func InitLoginStats() error {
 		return err
 	}
 
-	// Check if the current week exists in the "value" object
-	currentWeek := time.Now().Format("2006-01-02")
-	update = bson.M{
-		"$set": bson.M{
-			"value." + currentWeek: 0,
-		},
-	}
-
 	_, err = statsCollection.UpdateOne(ctx, filter, update)
 	return err
 }
