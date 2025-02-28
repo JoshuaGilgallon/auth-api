@@ -83,7 +83,6 @@ func AdminLogin(input AdminLoginInput) (interface{}, error) {
 	// Try to get the user by username
 	adminUser, err := repositories.GetAdminByUsername(input.Username)
 	if err != nil || adminUser.ID.IsZero() {
-		log.Printf("Admin account not found: %v", err)
 		return nil, errors.NewInvalidCredentialsError("Invalid username or password", nil)
 	}
 

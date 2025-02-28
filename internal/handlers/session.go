@@ -4,7 +4,6 @@ import (
 	"auth-api/internal/errors"
 	"auth-api/internal/services"
 	"auth-api/internal/utils"
-	"log"
 	"net/http"
 	"strings"
 
@@ -26,7 +25,6 @@ func CreateSession(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		log.Printf("Invalid session creation request: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
 		return
 	}
@@ -36,15 +34,12 @@ func CreateSession(c *gin.Context) {
 
 	userID, err := primitive.ObjectIDFromHex(input.UserID)
 	if err != nil {
-		log.Printf("Invalid user ID format: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID format"})
 		return
 	}
 
 	session, err := services.CreateSession(userID)
 	if err != nil {
-		log.Printf("Session creation failed for user %s: %v", input.UserID, err)
-
 		switch e := err.(type) {
 		case *errors.UserError:
 			switch e.Type {
@@ -61,7 +56,6 @@ func CreateSession(c *gin.Context) {
 		return
 	}
 
-	log.Printf("Session created successfully for user: %s", input.UserID)
 	c.JSON(http.StatusCreated, session)
 }
 
@@ -82,7 +76,6 @@ func ValidateSession(c *gin.Context) {
 
 	session, err := services.ValidateAccessToken(token)
 	if err != nil {
-		log.Printf("Session validation failed: %v", err)
 
 		switch e := err.(type) {
 		case *errors.UserError:
@@ -119,7 +112,6 @@ func RefreshSession(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		log.Printf("Invalid refresh token request: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
 		return
 	}
@@ -133,7 +125,6 @@ func RefreshSession(c *gin.Context) {
 
 	session, err := services.RefreshAccessToken(input.RefreshToken)
 	if err != nil {
-		log.Printf("Session refresh failed: %v", err)
 
 		switch e := err.(type) {
 		case *errors.UserError:
@@ -153,7 +144,6 @@ func RefreshSession(c *gin.Context) {
 		return
 	}
 
-	log.Printf("Session refreshed successfully")
 	c.JSON(http.StatusOK, session)
 }
 
@@ -173,7 +163,6 @@ func InvalidateSession(c *gin.Context) {
 	}
 
 	if err := services.InvalidateSessionByToken(token); err != nil {
-		log.Printf("Session invalidation failed: %v", err)
 
 		switch e := err.(type) {
 		case *errors.UserError:

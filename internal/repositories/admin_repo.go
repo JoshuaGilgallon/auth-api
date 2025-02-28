@@ -20,10 +20,6 @@ func SetAdminCollection(collection *mongo.Collection) {
 	adminCollection = collection
 }
 
-func SetAdminSessionCollection(collection *mongo.Collection) {
-	adminSessionCollection = collection
-}
-
 func SaveAdmin(adminUser models.AdminUser) (models.AdminUser, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

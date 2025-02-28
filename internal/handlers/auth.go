@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"auth-api/internal/errors"
+	"auth-api/internal/repositories"
 	"auth-api/internal/services"
 	"auth-api/internal/utils"
-	"log"
 	"net/http"
 	"strings"
 
@@ -39,8 +39,6 @@ func Login(c *gin.Context) {
 
 	session, err := services.Login(loginInput)
 	if err != nil {
-		log.Printf("Login attempt failed: %v", err)
-
 		switch e := err.(type) {
 		case *errors.LoginError:
 			switch e.Type {
@@ -61,12 +59,8 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// Use email or phone number for logging, whichever was provided
-	identifier := loginInput.Email
-	if identifier == "" {
-		identifier = loginInput.PhoneNumber
-	}
-	log.Printf("Successful login for user with identifier: %s", identifier)
+	repositories.IncreaseLoginCount()
+
 	c.JSON(http.StatusOK, session)
 }
 
@@ -86,8 +80,6 @@ func Logout(c *gin.Context) {
 	}
 
 	if err := services.Logout(token); err != nil {
-		log.Printf("Logout error: %v", err)
-
 		switch e := err.(type) {
 		case *errors.UserError:
 			switch e.Type {
@@ -140,8 +132,6 @@ func SignUp(c *gin.Context) {
 
 	user, err := services.CreateUser(userInput)
 	if err != nil {
-		log.Printf("User creation error: %v", err)
-
 		switch e := err.(type) {
 		case *errors.UserError:
 			switch e.Type {
@@ -158,11 +148,5 @@ func SignUp(c *gin.Context) {
 		return
 	}
 
-	// Update logging to use email or phone number instead of username
-	identifier := userInput.Email
-	if identifier == "" {
-		identifier = userInput.PhoneNumber
-	}
-	log.Printf("New user created with identifier: %s", identifier)
 	c.JSON(http.StatusCreated, user)
 }

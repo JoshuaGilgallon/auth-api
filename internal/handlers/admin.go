@@ -83,7 +83,6 @@ func AdvancedSearch(c *gin.Context) {
 	}
 
 	if searchErr != nil {
-		log.Printf("Search error: %v", searchErr)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Search operation failed"})
 		return
 	}
@@ -124,7 +123,6 @@ func AdminLogin(c *gin.Context) {
 	session, err := services.AdminLogin(adminLoginInput)
 	if err != nil {
 		// Don't expose specific error messages
-		log.Printf("Login error: %v", err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}

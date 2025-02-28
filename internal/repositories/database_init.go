@@ -43,6 +43,11 @@ func InitDatabase(config *internalconfig.DatabaseConfig) error {
 
 	SetStatsCollection(db.Collection("stats"))
 
+	// Initialize login stats
+	if err := InitLoginStats(); err != nil {
+		return err
+	}
+
 	return nil
 }
 

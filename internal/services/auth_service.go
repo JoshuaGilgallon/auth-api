@@ -5,7 +5,6 @@ import (
 	"auth-api/internal/models"
 	"auth-api/internal/repositories"
 	"auth-api/internal/utils"
-	"log"
 )
 
 type LoginInput struct {
@@ -17,22 +16,15 @@ type LoginInput struct {
 func Login(input LoginInput) (models.Session, error) {
 	var user models.User
 
-	log.Printf("Login attempt - Email: %s, Phone: %s", input.Email, input.PhoneNumber)
-
 	// Try to get the user by Email first
 	user, err := repositories.GetUserByEmail(input.Email)
-	log.Printf("GetUserByEmail returned - User: %+v, Error: %v", user, err)
 	if err != nil || user.ID.IsZero() {
-		log.Printf("User not found with email: %s, error: %v", input.Email, err)
 		// If not found, try by phone number
 		user, err = repositories.GetUserByPhoneNumber(input.PhoneNumber)
 		if err != nil || user.ID.IsZero() {
-			log.Printf("User not found with phone number: %s, error: %v", input.PhoneNumber, err)
 			return models.Session{}, errors.NewInvalidCredentialsError("Incorrect Login Credentials", nil)
 		}
-		log.Printf("User found with phone number: %s", input.PhoneNumber)
 	} else {
-		log.Printf("User found with email: %s", input.Email)
 	}
 
 	// Validate password

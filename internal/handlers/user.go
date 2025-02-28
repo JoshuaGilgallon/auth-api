@@ -4,7 +4,6 @@ import (
 	"auth-api/internal/errors"
 	"auth-api/internal/services"
 	"auth-api/internal/utils"
-	"log"
 	"net/http"
 	"strings"
 
@@ -22,7 +21,6 @@ import (
 func CreateUser(c *gin.Context) {
 	var userInput services.UserInput
 	if err := c.ShouldBindJSON(&userInput); err != nil {
-		log.Printf("Invalid user creation request: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
 		return
 	}
@@ -44,7 +42,6 @@ func CreateUser(c *gin.Context) {
 
 	user, err := services.CreateUser(userInput)
 	if err != nil {
-		log.Printf("User creation error: %v", err)
 
 		switch e := err.(type) {
 		case *errors.UserError:
@@ -62,8 +59,6 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	// Log success but don't expose full user details
-	log.Printf("User created successfully with ID: %s", user.ID.Hex())
 	c.JSON(http.StatusCreated, user)
 }
 
@@ -84,7 +79,6 @@ func GetUser(c *gin.Context) {
 
 	user, err := services.GetUser(id)
 	if err != nil {
-		log.Printf("Error fetching user %s: %v", id, err)
 
 		switch e := err.(type) {
 		case *errors.UserError:
@@ -127,7 +121,6 @@ func GetCurrentUser(c *gin.Context) {
 
 	user, err := services.GetCurrentUser(token)
 	if err != nil {
-		log.Printf("Error fetching current user: %v", err)
 
 		switch e := err.(type) {
 		case *errors.UserError:
@@ -147,6 +140,5 @@ func GetCurrentUser(c *gin.Context) {
 		return
 	}
 
-	log.Printf("Current user info retrieved for user ID: %s", user.ID.Hex())
 	c.JSON(http.StatusOK, user)
 }
