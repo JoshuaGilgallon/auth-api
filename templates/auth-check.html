@@ -31,10 +31,14 @@
     <div class="loader"></div>
     <script>
         async function checkAuthentication() {
+            // Get the target page from URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const target = urlParams.get('target') || 'dashboard';
+
             try {
                 const validationResponse = await fetch('/api/admin/validate', {
                     method: 'GET',
-                    credentials: 'include'  // Important: include credentials
+                    credentials: 'include'
                 });
 
                 if (!validationResponse.ok) {
@@ -42,20 +46,21 @@
                     return;
                 }
 
-                const dashboardResponse = await fetch('/admin/dashboard/content', {
-                    credentials: 'include'  // Important: include credentials
+                // Load the target page content
+                const pageResponse = await fetch(`/admin/content/${target}`, {
+                    credentials: 'include'
                 });
 
-                if (!dashboardResponse.ok) {
-                    throw new Error('Failed to load dashboard');
+                if (!pageResponse.ok) {
+                    throw new Error('Failed to load page content');
                 }
 
-                const content = await dashboardResponse.text();
+                const content = await pageResponse.text();
                 document.open();
                 document.write(content);
                 document.close();
             } catch (error) {
-                console.error('Failed to load dashboard:', error);
+                console.error('Authentication failed:', error);
                 window.location.href = '/admin/login';
             }
         }

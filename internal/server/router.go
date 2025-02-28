@@ -13,8 +13,9 @@ func SetupRouter() *gin.Engine {
 	// Serve static files
 	r.Static("/internal/static", "./internal/static")
 
-	// Serve favicon.ico
-	r.StaticFile("/favicon.ico", "./internal/static/favicon.ico")
+	// Serve images
+	r.StaticFile("/favicon.ico", "favicon.ico")
+	r.StaticFile("/logo.png", "logo.png")
 
 	// Load templates in the correct order - base templates first, then pages
 	r.LoadHTMLFiles(
@@ -73,29 +74,53 @@ func SetupRouter() *gin.Engine {
 	// Admin web routes
 	admin := r.Group("/admin")
 	{
+		// Login page (public)
 		admin.GET("/login", func(c *gin.Context) {
 			c.HTML(http.StatusOK, "admin_login.html", gin.H{"title": "Admin Login"})
 		})
-		admin.GET("/", func(c *gin.Context) {
+
+		// Auth check page with target parameter
+		admin.GET("/auth-check", func(c *gin.Context) {
 			c.HTML(http.StatusOK, "auth-check.html", gin.H{})
 		})
-		admin.GET("/dashboard/content", func(c *gin.Context) {
-			c.HTML(http.StatusOK, "dashboard-content.html", gin.H{
-				"title":  "Dashboard",
-				"active": "dashboard", // This will highlight the current page in sidebar
+
+		// Protected content routes
+		content := admin.Group("/content")
+		{
+			content.GET("/dashboard", func(c *gin.Context) {
+				c.HTML(http.StatusOK, "dashboard-content.html", gin.H{
+					"title":  "Dashboard",
+					"active": "dashboard",
+				})
 			})
+
+			content.GET("/users", func(c *gin.Context) {
+				c.HTML(http.StatusOK, "users.html", gin.H{
+					"title":  "User Management",
+					"active": "users",
+				})
+			})
+
+			content.GET("/sessions", func(c *gin.Context) {
+				c.HTML(http.StatusOK, "sessions.html", gin.H{
+					"title":  "Active Sessions",
+					"active": "sessions",
+				})
+			})
+		}
+
+		// Redirect all main admin routes to auth-check with appropriate target
+		admin.GET("/", func(c *gin.Context) {
+			c.Redirect(http.StatusFound, "/admin/auth-check?target=dashboard")
+		})
+		admin.GET("/dashboard", func(c *gin.Context) {
+			c.Redirect(http.StatusFound, "/admin/auth-check?target=dashboard")
 		})
 		admin.GET("/users", func(c *gin.Context) {
-			c.HTML(http.StatusOK, "users.html", gin.H{
-				"title":  "User Management",
-				"active": "users", // This will highlight the users tab in sidebar
-			})
+			c.Redirect(http.StatusFound, "/admin/auth-check?target=users")
 		})
 		admin.GET("/sessions", func(c *gin.Context) {
-			c.HTML(http.StatusOK, "sessions.html", gin.H{
-				"title":  "Active Sessions",
-				"active": "sessions", // This will highlight the sessions tab in sidebar
-			})
+			c.Redirect(http.StatusFound, "/admin/auth-check?target=sessions")
 		})
 	}
 
