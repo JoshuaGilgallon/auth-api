@@ -13,6 +13,9 @@ func SetupRouter() *gin.Engine {
 	// Serve static files
 	r.Static("/internal/static", "./internal/static")
 
+	// Serve favicon.ico
+	r.StaticFile("/favicon.ico", "./internal/static/favicon.ico")
+
 	// Load templates in the correct order - base templates first, then pages
 	r.LoadHTMLFiles(
 		"templates/partials/sidebar.html",
