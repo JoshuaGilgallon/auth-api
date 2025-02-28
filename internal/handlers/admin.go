@@ -147,7 +147,6 @@ func AdminLogin(c *gin.Context) {
 // @Tags admin
 // @Accept json
 // @Produce json
-// @Param authorization header string true "Bearer <token>"
 // @Success 200 {string} string "successfully logged out"
 // @Router /api/admin/logout [post]
 func AdminLogout(c *gin.Context) {
