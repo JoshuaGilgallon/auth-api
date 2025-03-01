@@ -146,6 +146,60 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="openEditModal()">Edit User</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editUserModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editUserForm">
+                        <input type="hidden" id="editUserId">
+                        <div class="mb-3">
+                            <label for="editFirstName" class="form-label">First Name</label>
+                            <input type="text" class="form-control" id="editFirstName">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editLastName" class="form-label">Last Name</label>
+                            <input type="text" class="form-control" id="editLastName">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="editEmail">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editPhoneNumber" class="form-label">Phone Number</label>
+                            <input type="text" class="form-control" id="editPhoneNumber">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editBirthDate" class="form-label">Birth Date</label>
+                            <input type="date" class="form-control" id="editBirthDate">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editLanguage" class="form-label">Language</label>
+                            <input type="text" class="form-control" id="editLanguage">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editPassword" class="form-label">New Password (leave blank to keep current)</label>
+                            <input type="password" class="form-control" id="editPassword">
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="editMFAEnabled">
+                            <label class="form-check-label" for="editMFAEnabled">MFA Enabled</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveUserChanges()">Save Changes</button>
                 </div>
             </div>
         </div>
@@ -235,7 +289,80 @@
                 url: `/api/user/${userId}`,
                 method: "GET",
                 success: function(data) {
+                    console.log('User details received:', data); // Add debug logging
                     $("#userDetailsContent").text(JSON.stringify(data, null, 2));
+                    window.currentUserData = data; // Store for edit modal
+                },
+                error: function(xhr) {
+                    console.error("Error fetching user details:", xhr);
+                }
+            });
+        }
+
+        // Function to open edit modal with user data
+        function openEditModal() {
+            const userData = window.currentUserData;
+            console.log('Opening edit modal with data:', userData); // Add debug logging
+            
+            if (!userData) {
+                console.error('No user data available');
+                return;
+            }
+
+            $("#editUserId").val(userData.id);
+            $("#editFirstName").val(userData.name || '');  // Changed from first_name to name
+            $("#editLastName").val(userData.last_name || '');
+            $("#editEmail").val(userData.email || '');
+            $("#editPhoneNumber").val(userData.phone_number || '');
+            $("#editBirthDate").val(userData.birth_date ? userData.birth_date.split('T')[0] : '');
+            $("#editLanguage").val(userData.language || '');
+            $("#editMFAEnabled").prop('checked', !!userData.mfa_enabled);
+            
+            $("#editPassword").val('');
+            
+            $("#userDetailsModal").modal('hide');
+            $("#editUserModal").modal('show');
+        }
+
+        // Function to save user changes
+        function saveUserChanges() {
+            const userId = $("#editUserId").val();
+            const userData = {
+                name: $("#editFirstName").val().trim(),  // Changed from first_name to name
+                last_name: $("#editLastName").val().trim(),
+                email: $("#editEmail").val().trim(),
+                phone_number: $("#editPhoneNumber").val().trim(),
+                birth_date: $("#editBirthDate").val(),
+                language: $("#editLanguage").val().trim(),
+                mfa_enabled: $("#editMFAEnabled").is(':checked')
+            };
+
+            // Only include password if it's been changed
+            const password = $("#editPassword").val().trim();
+            if (password) {
+                userData.password = password;
+            }
+
+            console.log('Sending update request:', userData); // Add debug logging
+
+            $.ajax({
+                url: `/api/admin/updateuser?id=${userId}`,
+                method: "PATCH",
+                contentType: "application/json",
+                data: JSON.stringify(userData),
+                success: function(response) {
+                    console.log('Update response:', response); // Add debug logging
+                    $("#editUserModal").modal('hide');
+                    alert("User updated successfully");
+                    location.reload();
+                },
+                error: function(xhr) {
+                    console.error("Update error:", {
+                        status: xhr.status,
+                        response: xhr.responseText,
+                        data: userData
+                    });
+                    alert("Error updating user: " + (xhr.responseJSON?.error || xhr.responseText || "Unknown error"));
                 }
             });
         }

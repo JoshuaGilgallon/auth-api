@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -36,60 +35,60 @@ func AdvancedSearch(c *gin.Context) {
 	// Log admin action
 	log.Printf("Admin %s performing advanced search", adminSession.AdminID)
 
-	// Sanitize inputs
-	email := strings.TrimSpace(c.Query("email"))
-	phoneNumber := strings.TrimSpace(c.Query("phone_number"))
-
-	// Validate time formats
-	timeParams := map[string]string{
-		"start_time":         c.Query("start_time"),
-		"end_time":           c.Query("end_time"),
-		"updated_start_time": c.Query("updated_start_time"),
-		"updated_end_time":   c.Query("updated_end_time"),
+	// Build search criteria
+	criteria := models.UserSearchCriteria{
+		FirstName:   strings.TrimSpace(c.Query("first_name")),
+		LastName:    strings.TrimSpace(c.Query("last_name")),
+		Email:       strings.TrimSpace(c.Query("email")),
+		PhoneNumber: strings.TrimSpace(c.Query("phone_number")),
 	}
 
-	times := make(map[string]time.Time)
-	for key, value := range timeParams {
-		if value != "" {
-			parsedTime, err := utils.SafeParseTime(value)
-			if err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid time format"})
-				return
-			}
-			times[key] = parsedTime
+	// Parse time parameters
+	if startTime := c.Query("start_time"); startTime != "" {
+		if parsed, err := utils.SafeParseTime(startTime); err == nil {
+			criteria.StartTime = &parsed
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid start_time format"})
+			return
 		}
 	}
 
-	var users []models.User
-	var searchErr error
-
-	// Perform searches based on available parameters
-	if !times["start_time"].IsZero() && !times["end_time"].IsZero() {
-		users, searchErr = services.SearchUserByCreateTimeRange(times["start_time"], times["end_time"])
-	} else if !times["updated_start_time"].IsZero() && !times["updated_end_time"].IsZero() {
-		users, searchErr = services.SearchUsersByTimeUpdatedRange(times["updated_start_time"], times["updated_end_time"])
-	} else if email != "" {
-		var user models.User
-		user, searchErr = services.SearchUserByCredentials(email)
-		if searchErr == nil {
-			users = append(users, user)
-		}
-	} else if phoneNumber != "" {
-		var user models.User
-		user, searchErr = services.SearchUserByCredentials(phoneNumber)
-		if searchErr == nil {
-			users = append(users, user)
+	if endTime := c.Query("end_time"); endTime != "" {
+		if parsed, err := utils.SafeParseTime(endTime); err == nil {
+			criteria.EndTime = &parsed
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid end_time format"})
+			return
 		}
 	}
 
-	if searchErr != nil {
+	if updateStartTime := c.Query("updated_start_time"); updateStartTime != "" {
+		if parsed, err := utils.SafeParseTime(updateStartTime); err == nil {
+			criteria.UpdateStartTime = &parsed
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid updated_start_time format"})
+			return
+		}
+	}
+
+	if updateEndTime := c.Query("updated_end_time"); updateEndTime != "" {
+		if parsed, err := utils.SafeParseTime(updateEndTime); err == nil {
+			criteria.UpdateEndTime = &parsed
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid updated_end_time format"})
+			return
+		}
+	}
+
+	// Perform search
+	users, err := services.SearchUsers(criteria)
+	if err != nil {
+		log.Printf("Search error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Search operation failed"})
 		return
 	}
 
-	// Deduplicate users
-	uniqueUsers := utils.DeduplicateUsers(users)
-	c.JSON(http.StatusOK, uniqueUsers)
+	c.JSON(http.StatusOK, users)
 }
 
 // when creating an administrator session, ensure that there is no token stored in a cookie.

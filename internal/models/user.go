@@ -29,3 +29,14 @@ type User struct {
 	MFAEnabled      bool               `bson:"mfa_enabled" json:"mfa_enabled"`
 	Status          string             `bson:"status" json:"status"`
 }
+
+type UserSearchCriteria struct {
+	FirstName       string
+	LastName        string
+	Email           string
+	PhoneNumber     string
+	StartTime       *time.Time
+	EndTime         *time.Time
+	UpdateStartTime *time.Time
+	UpdateEndTime   *time.Time
+}

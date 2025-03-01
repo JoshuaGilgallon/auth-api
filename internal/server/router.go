@@ -63,6 +63,7 @@ func SetupRouter() *gin.Engine {
 			admin.POST("/logout", handlers.AdminLogout)
 			admin.POST("/create", handlers.CreateAdminAccount)
 			admin.GET("/validate", handlers.ValidateAdminSession)
+			admin.PATCH("/updateuser", handlers.AdminUpdateUser)
 		}
 		stats := api.Group("/stats")
 		{

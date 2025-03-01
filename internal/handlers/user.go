@@ -4,6 +4,7 @@ import (
 	"auth-api/internal/errors"
 	"auth-api/internal/services"
 	"auth-api/internal/utils"
+	"log"
 	"net/http"
 	"strings"
 
@@ -141,4 +142,61 @@ func GetCurrentUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, user)
+}
+
+// ADMIN USER ENDPOINTS:
+
+// @Summary Edit user
+// @Description Edits user by their ID
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Param user body services.UserInput true "User input data"
+// @Success 200 {object} models.User
+// @Router /api/admin/updateuser [patch]
+func AdminUpdateUser(c *gin.Context) {
+	adminSession, err := validateAdminSession(c)
+	if err != nil {
+		log.Printf("Admin session validation failed: %v", err)
+		return
+	}
+
+	log.Printf("Admin %s updating user", adminSession.AdminID)
+
+	userID := c.Query("id")
+	if userID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User ID is required"})
+		return
+	}
+
+	var userInput services.UserInput
+	if err := c.ShouldBindJSON(&userInput); err != nil {
+		log.Printf("Error binding JSON: %v, Body: %v", err, c.Request.Body)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
+
+	log.Printf("Received update request for user %s with data: %+v", userID, userInput)
+
+	updatedUser, err := services.UpdateUser(userID, userInput)
+	if err != nil {
+		log.Printf("Error updating user %s: %v", userID, err)
+		switch e := err.(type) {
+		case *errors.UserError:
+			switch e.Type {
+			case errors.NotFound:
+				c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+			case errors.ValidationError:
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input data"})
+			default:
+				c.JSON(http.StatusInternalServerError, gin.H{"error": e.Error()})
+			}
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, updatedUser)
 }

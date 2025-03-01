@@ -4,7 +4,9 @@ import (
 	"auth-api/internal/models"
 	"auth-api/internal/utils"
 	"context"
+	"fmt"
 	"log"
+	"regexp"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -23,9 +25,24 @@ func SaveUser(user models.User) (models.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	// If the user has an ID, update the existing document
+	if !user.ID.IsZero() {
+		filter := bson.M{"_id": user.ID}
+		update := bson.M{"$set": user}
+
+		_, err := userCollection.UpdateOne(ctx, filter, update)
+		if err != nil {
+			log.Printf("Error updating user: %v", err)
+			return models.User{}, fmt.Errorf("failed to update user: %w", err)
+		}
+
+		return user, nil
+	}
+
+	// For new users, insert a new document
 	result, err := userCollection.InsertOne(ctx, user)
 	if err != nil {
-		return models.User{}, err
+		return models.User{}, fmt.Errorf("failed to insert user: %w", err)
 	}
 
 	user.ID = result.InsertedID.(primitive.ObjectID)
@@ -171,4 +188,102 @@ func GetTotalUsers() (int64, error) {
 	}
 
 	return count, nil
+}
+
+func SearchUsersByFields(criteria models.UserSearchCriteria) ([]models.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	orConditions := []bson.M{}
+
+	// Add name search conditions if provided
+	if (criteria.FirstName != "") {
+		orConditions = append(orConditions, bson.M{
+			"first_name": bson.M{
+				"$regex":   "(?i)" + regexp.QuoteMeta(criteria.FirstName),
+				"$options": "i",
+			},
+		})
+	}
+
+	if (criteria.LastName != "") {
+		orConditions = append(orConditions, bson.M{
+			"last_name": bson.M{
+				"$regex":   "(?i)" + regexp.QuoteMeta(criteria.LastName),
+				"$options": "i",
+			},
+		})
+	}
+
+	// Handle email search with both partial and hash matching
+	if (criteria.Email != "") {
+		emailConditions := []bson.M{
+			// Match by partial email (for unencrypted emails)
+			{
+				"email": bson.M{
+					"$regex":   "(?i)" + regexp.QuoteMeta(criteria.Email),
+					"$options": "i",
+				},
+			},
+			// Match by email hash (for encrypted emails)
+			{
+				"email_hash": utils.HashSHA(criteria.Email),
+			},
+		}
+		orConditions = append(orConditions, bson.M{"$or": emailConditions})
+	}
+
+	// Handle phone number search similarly
+	if (criteria.PhoneNumber != "") {
+		phoneConditions := []bson.M{
+			// Match by partial phone number (for unencrypted numbers)
+			{
+				"phone_number": bson.M{
+					"$regex": regexp.QuoteMeta(criteria.PhoneNumber),
+				},
+			},
+			// Match by phone hash (for encrypted numbers)
+			{
+				"phone_number_hash": utils.HashSHA(criteria.PhoneNumber),
+			},
+		}
+		orConditions = append(orConditions, bson.M{"$or": phoneConditions})
+	}
+
+	filter := bson.M{}
+	if (len(orConditions) > 0) {
+		filter = bson.M{"$or": orConditions}
+	}
+
+	// Execute the query
+	cursor, err := userCollection.Find(ctx, filter)
+	if (err != nil) {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	// Use a map to deduplicate users by ID
+	userMap := make(map[string]models.User)
+
+	for cursor.Next(ctx) {
+		var user models.User
+		if err := cursor.Decode(&user); err != nil {
+			return nil, err
+		}
+		// Use ID as key for deduplication
+		userMap[user.ID.Hex()] = user
+	}
+
+	err = cursor.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert map back to slice
+	users := make([]models.User, 0, len(userMap))
+	for _, user := range userMap {
+		users = append(users, user)
+	}
+
+	return users, nil
 }

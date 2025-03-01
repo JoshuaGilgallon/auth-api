@@ -4,18 +4,21 @@ import (
 	"auth-api/internal/models"
 	"auth-api/internal/repositories"
 	"auth-api/internal/utils"
+	"fmt"
+	"log"
+	"strings"
 	"time"
 )
 
 type UserInput struct {
-	FirstName   string    `json:"name"`
-	LastName    string    `json:"last_name"`
-	Email       string    `json:"email"`
-	PhoneNumber string    `json:"phone_number"`
-	Password    string    `json:"password"`
-	BirthDate   time.Time `json:"birth_date"`
-	Language    string    `json:"language"`
-	MFAEnabled  bool      `json:"mfa_enabled"`
+	FirstName   string `json:"name"` // This field maps to "name" in JSON
+	LastName    string `json:"last_name"`
+	Email       string `json:"email"`
+	PhoneNumber string `json:"phone_number"`
+	Password    string `json:"password"`
+	BirthDate   string `json:"birth_date"`
+	Language    string `json:"language"`
+	MFAEnabled  bool   `json:"mfa_enabled"`
 }
 
 func CreateUser(input UserInput) (models.User, error) {
@@ -51,14 +54,90 @@ func CreateUser(input UserInput) (models.User, error) {
 		PhoneNumberHash: hashedPhoneNumber,
 		Password:        hashedPassword,
 		Bio:             "",
-		BirthDate:       input.BirthDate,
+		BirthDate:       time.Time{}, // Initialize with zero value
 		Language:        input.Language,
 		CreatedAt:       now,
 		UpdatedAt:       now,
 		MFAEnabled:      input.MFAEnabled,
 		Status:          models.StatusActive, // set the status to active by default
 	}
+
+	if input.BirthDate != "" {
+		birthDate, err := time.Parse("2006-01-02", input.BirthDate)
+		if err != nil {
+			return models.User{}, err
+		}
+		user.BirthDate = birthDate
+	}
+
 	return repositories.SaveUser(user)
+}
+
+func UpdateUser(id string, input UserInput) (models.User, error) {
+	existingUser, err := repositories.GetUserByID(id)
+	if err != nil {
+		log.Printf("Error fetching user %s: %v", id, err)
+		return models.User{}, fmt.Errorf("failed to fetch user: %w", err)
+	}
+
+	if input.FirstName != "" {
+		existingUser.FirstName = input.FirstName
+	}
+	if input.LastName != "" {
+		existingUser.LastName = input.LastName
+	}
+	if input.Email != "" {
+		// Encrypt and hash email
+		encryptedEmail, err := utils.Encrypt(input.Email)
+		if err != nil {
+			log.Printf("Error encrypting email for user %s: %v", id, err)
+			return models.User{}, fmt.Errorf("failed to encrypt email: %w", err)
+		}
+		existingUser.Email = encryptedEmail
+		existingUser.EmailHash = utils.HashSHA(strings.ToLower(input.Email)) // Hash lowercase email
+	}
+	if input.PhoneNumber != "" {
+		// Encrypt and hash phone number
+		encryptedPhone, err := utils.Encrypt(input.PhoneNumber)
+		if err != nil {
+			log.Printf("Error encrypting phone for user %s: %v", id, err)
+			return models.User{}, fmt.Errorf("failed to encrypt phone: %w", err)
+		}
+		existingUser.PhoneNumber = encryptedPhone
+		existingUser.PhoneNumberHash = utils.HashSHA(input.PhoneNumber)
+	}
+	if input.Password != "" {
+		// Hash new password
+		hashedPassword, err := utils.HashBcrypt(input.Password)
+		if err != nil {
+			log.Printf("Error hashing password for user %s: %v", id, err)
+			return models.User{}, fmt.Errorf("failed to hash password: %w", err)
+		}
+		existingUser.Password = hashedPassword
+	}
+	if input.BirthDate != "" {
+		birthDate, err := time.Parse("2006-01-02", input.BirthDate)
+		if err != nil {
+			log.Printf("Error parsing birth date '%s' for user %s: %v", input.BirthDate, id, err)
+			return models.User{}, fmt.Errorf("invalid birth date format: %w", err)
+		}
+		existingUser.BirthDate = birthDate
+	}
+	if input.Language != "" {
+		existingUser.Language = input.Language
+	}
+
+	existingUser.MFAEnabled = input.MFAEnabled
+	existingUser.UpdatedAt = time.Now()
+
+	// Save the updated user
+	updatedUser, err := repositories.SaveUser(existingUser)
+	if err != nil {
+		log.Printf("Error saving user %s: %v", id, err)
+		return models.User{}, fmt.Errorf("failed to save user: %w", err)
+	}
+
+	return updatedUser, nil
 }
 
 func GetUser(id string) (models.User, error) {
@@ -222,4 +301,80 @@ func GetCurrentUser(token string) (models.User, error) {
 	user.PhoneNumber = decryptedPhoneNumber
 
 	return user, nil
+}
+
+func SearchUsers(criteria models.UserSearchCriteria) ([]models.User, error) {
+	var allUsers []models.User
+
+	// Search by time ranges if provided
+	if criteria.StartTime != nil && criteria.EndTime != nil {
+		users, err := repositories.GetUsersByTimeCreatedRange(*criteria.StartTime, *criteria.EndTime)
+		if err != nil {
+			return nil, err
+		}
+		allUsers = append(allUsers, users...)
+	}
+
+	if criteria.UpdateStartTime != nil && criteria.UpdateEndTime != nil {
+		users, err := repositories.GetUsersByTimeUpdatedRange(*criteria.UpdateStartTime, *criteria.UpdateEndTime)
+		if err != nil {
+			return nil, err
+		}
+		allUsers = append(allUsers, users...)
+	}
+
+	// Search by other criteria
+	if criteria.Email != "" || criteria.PhoneNumber != "" || criteria.FirstName != "" || criteria.LastName != "" {
+		users, err := repositories.SearchUsersByFields(criteria)
+		if err != nil {
+			return nil, err
+		}
+		allUsers = append(allUsers, users...)
+	}
+
+	// Process results
+	results := make([]models.User, 0)
+	processedIDs := make(map[string]bool)
+
+	for _, user := range allUsers {
+		if !processedIDs[user.ID.Hex()] {
+			// Decrypt sensitive fields
+			decryptedEmail, err := utils.Decrypt(user.Email)
+			if err != nil {
+				return nil, err
+			}
+
+			decryptedPhone, err := utils.Decrypt(user.PhoneNumber)
+			if err != nil {
+				return nil, err
+			}
+
+			user.Email = decryptedEmail
+			user.PhoneNumber = decryptedPhone
+
+			// Add to results if matches criteria
+			if matchesCriteria(user, criteria) {
+				results = append(results, user)
+				processedIDs[user.ID.Hex()] = true
+			}
+		}
+	}
+
+	return results, nil
+}
+
+func matchesCriteria(user models.User, criteria models.UserSearchCriteria) bool {
+	if criteria.FirstName != "" && !strings.Contains(strings.ToLower(user.FirstName), strings.ToLower(criteria.FirstName)) {
+		return false
+	}
+	if criteria.LastName != "" && !strings.Contains(strings.ToLower(user.LastName), strings.ToLower(criteria.LastName)) {
+		return false
+	}
+	if criteria.Email != "" && !strings.Contains(strings.ToLower(user.Email), strings.ToLower(criteria.Email)) {
+		return false
+	}
+	if criteria.PhoneNumber != "" && !strings.Contains(user.PhoneNumber, criteria.PhoneNumber) {
+		return false
+	}
+	return true
 }
