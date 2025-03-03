@@ -108,8 +108,11 @@ body {
     color: white;
 }
 
+/* Card body scrolling */
 .card-body {
     padding: 1.5rem;
+    max-height: calc(100vh - 280px);
+    overflow-y: auto;
 }
 
 .stat-value {
@@ -291,4 +294,41 @@ body {
 .card {
     height: 100%;
     margin-bottom: 0;
+}
+
+.table-responsive {
+    margin-bottom: 1rem;
+}
+
+/* Pagination styles */
+.pagination-container {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(0,0,0,.1);
+}
+
+.pagination {
+    margin-bottom: 0.5rem;
+}
+
+.page-link {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.page-item.active .page-link {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.page-item.disabled .page-link {
+    color: var(--text-light);
+    border-color: #dee2e6;
+}
+
+/* Page size select */
+#pageSize {
+    min-width: 120px;
 }

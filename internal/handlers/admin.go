@@ -36,7 +36,7 @@ func AdvancedSearch(c *gin.Context) {
 	log.Printf("Admin %s performing advanced search", adminSession.AdminID)
 
 	// Build search criteria
-	criteria := models.UserSearchCriteria{
+	criteria := models.UserAdvancedSearchCriteria{
 		FirstName:   strings.TrimSpace(c.Query("first_name")),
 		LastName:    strings.TrimSpace(c.Query("last_name")),
 		Email:       strings.TrimSpace(c.Query("email")),
@@ -89,6 +89,54 @@ func AdvancedSearch(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, users)
+}
+
+// @Summary Simple search for users
+// @Description Search for users using a single search term across all fields
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Param search query string true "Search term"
+// @Success 200 {array} models.UserSearchCriteria
+// @Router /api/admin/search [get]
+func SimpleSearch(c *gin.Context) {
+	// Validate admin session first
+	adminSession, err := validateAdminSession(c)
+	if err != nil {
+		return
+	}
+
+	var userSearchCriteria models.UserSearchCriteria
+
+	// Bind JSON request body to UserSearchCriteria struct
+	if err := c.ShouldBindQuery(&userSearchCriteria); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format:"})
+		return
+	}
+
+	// Log admin action
+	log.Printf("Admin %s performing simple search", adminSession.AdminID)
+
+	// Get search term from query
+	searchTerm := strings.TrimSpace(userSearchCriteria.SearchTerm)
+	if searchTerm == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Search term is required"})
+		return
+	}
+
+	// Perform search
+	result, err := services.SimpleSearch(searchTerm, userSearchCriteria.PageNumber, userSearchCriteria.PageSize)
+	if err != nil {
+		log.Printf("Search error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Search operation failed"})
+		return
+	}
+
+	// Return both users and total results
+	c.JSON(http.StatusOK, gin.H{
+		"users":         result.Users,
+		"total_results": result.TotalResults,
+	})
 }
 
 // when creating an administrator session, ensure that there is no token stored in a cookie.

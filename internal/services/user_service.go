@@ -303,7 +303,7 @@ func GetCurrentUser(token string) (models.User, error) {
 	return user, nil
 }
 
-func SearchUsers(criteria models.UserSearchCriteria) ([]models.User, error) {
+func SearchUsers(criteria models.UserAdvancedSearchCriteria) ([]models.User, error) {
 	var allUsers []models.User
 
 	// Search by time ranges if provided
@@ -363,7 +363,7 @@ func SearchUsers(criteria models.UserSearchCriteria) ([]models.User, error) {
 	return results, nil
 }
 
-func matchesCriteria(user models.User, criteria models.UserSearchCriteria) bool {
+func matchesCriteria(user models.User, criteria models.UserAdvancedSearchCriteria) bool {
 	if criteria.FirstName != "" && !strings.Contains(strings.ToLower(user.FirstName), strings.ToLower(criteria.FirstName)) {
 		return false
 	}
@@ -377,4 +377,39 @@ func matchesCriteria(user models.User, criteria models.UserSearchCriteria) bool 
 		return false
 	}
 	return true
+}
+
+type SearchResult struct {
+	Users        []models.User
+	TotalResults int64
+}
+
+func SimpleSearch(searchTerm string, pageNum int64, pageSize int64) (SearchResult, error) {
+	skip := (pageNum - 1) * pageSize
+	users, total, err := repositories.SimpleSearchUsers(searchTerm, skip, pageSize)
+	if err != nil {
+		return SearchResult{}, err
+	}
+
+	// Decrypt sensitive information for each user
+	for i := range users {
+		// Decrypt email
+		decryptedEmail, err := utils.Decrypt(users[i].Email)
+		if err != nil {
+			return SearchResult{}, err
+		}
+		users[i].Email = decryptedEmail
+
+		// Decrypt phone number
+		decryptedPhone, err := utils.Decrypt(users[i].PhoneNumber)
+		if err != nil {
+			return SearchResult{}, err
+		}
+		users[i].PhoneNumber = decryptedPhone
+	}
+
+	return SearchResult{
+		Users:        users,
+		TotalResults: total,
+	}, nil
 }

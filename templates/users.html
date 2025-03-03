@@ -47,7 +47,20 @@
             <div class="card-header">
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center">
-                        <input type="text" id="searchUser" class="form-control" placeholder="Search users...">
+                        <div class="input-group">
+                            <input type="text" id="searchUser" class="form-control" placeholder="Search users...">
+                            <button class="btn btn-primary" id="searchButton">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                        </div>
+                        <div class="ms-3">
+                            <select class="form-select" id="pageSize">
+                                <option value="10">10 per page</option>
+                                <option value="25">25 per page</option>
+                                <option value="50">50 per page</option>
+                                <option value="100">100 per page</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="btn-group">
                         <button class="btn btn-danger" id="deleteUser">
@@ -84,6 +97,16 @@
                             <!-- More rows dynamically loaded -->
                         </tbody>
                     </table>
+                </div>
+                <div class="pagination-container mt-3">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center" id="pagination">
+                            <!-- Pagination will be dynamically populated -->
+                        </ul>
+                    </nav>
+                    <div class="text-center text-muted">
+                        <small id="paginationInfo">Showing 0 of 0 results</small>
+                    </div>
                 </div>
             </div>
         </div>
@@ -213,36 +236,145 @@
             $(".user-checkbox").prop('checked', $(this).prop('checked'));
         });
 
-        // Simple search functionality
-        $("#searchUser").on("keyup", function() {
-            let value = $(this).val().toLowerCase();
+        // Add this new function at the beginning of the script section
+        function renderUserRow(user) {
+            const name = `${user.name || ''} ${user.last_name || ''}`.trim();
+            const status = user.status || 'Unknown';
+            const statusClass = {
+                'active': 'text-success',
+                'inactive': 'text-warning',
+                'locked': 'text-danger'
+            }[status.toLowerCase()] || 'text-secondary';
+
+            return `
+                <tr>
+                    <td><input type="checkbox" class="user-checkbox" value="${user.id}"></td>
+                    <td>${user.id || ''}</td>
+                    <td>${name}</td>
+                    <td>${user.email || ''}</td>
+                    <td><span class="${statusClass}">${status}</span></td>
+                    <td>
+                        <button class="btn btn-info btn-sm" 
+                                onclick="showUserDetails('${user.id}')">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Add these variables at the start of the script
+        let currentPage = 1;
+        let totalResults = 0;
+        let currentPageSize = 10;
+
+        // Add pagination rendering function
+        function renderPagination(total) {
+            const totalPages = Math.max(1, Math.ceil(total / currentPageSize));
+            const pagination = $("#pagination");
+            pagination.empty();
+
+            if (totalPages <= 1) {
+                $("#paginationInfo").text(
+                    total === 0 ? 'No results found' : `Showing ${total} result${total !== 1 ? 's' : ''}`
+                );
+                return;
+            }
+
+            // Previous button
+            pagination.append(`
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" data-page="${currentPage - 1}">Previous</a>
+                </li>
+            `);
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    pagination.append(`
+                        <li class="page-item ${i === currentPage ? 'active' : ''}">
+                            <a class="page-link" href="#" data-page="${i}">${i}</a>
+                        </li>
+                    `);
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    pagination.append(`
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#">...</a>
+                        </li>
+                    `);
+                }
+            }
+
+            // Next button
+            pagination.append(`
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" data-page="${currentPage + 1}">Next</a>
+                </li>
+            `);
+
+            // Update pagination info
+            const start = Math.min((currentPage - 1) * currentPageSize + 1, total);
+            const end = Math.min(currentPage * currentPageSize, total);
+            $("#paginationInfo").text(`Showing ${start}-${end} of ${total} results`);
+        }
+
+        function performSearch() {
+            const searchParams = {
+                search_term: $("#searchUser").val().trim(),
+                page_number: currentPage,
+                page_size: currentPageSize
+            };
+            
             $.ajax({
-                url: "/api/admin/searchUserByCredentials",
+                url: "/api/admin/search",
                 method: "GET",
-                data: { search_term: value },
-                success: function(data) {
-                    // Update the user table with the search results
-                    // Assuming data is an array of users
-                    let userTableBody = $("#userTableBody");
+                data: searchParams, // Will be automatically converted to query string
+                success: function(response) {
+                    const userTableBody = $("#userTableBody");
                     userTableBody.empty();
-                    data.forEach(user => {
-                        userTableBody.append(`
-                            <tr>
-                                <td><input type="checkbox" class="user-checkbox"></td>
-                                <td>${user.id}</td>
-                                <td>${user.name} ${user.last_name}</td>
-                                <td>${user.email}</td>
-                                <td>${user.status}</td>
-                                <td><button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#userDetailsModal" onclick="showUserDetails('${user.id}')">View</button></td>
-                            </tr>
-                        `);
-                    });
+                    
+                    if (response.users && Array.isArray(response.users)) {
+                        response.users.forEach(user => {
+                            userTableBody.append(renderUserRow(user));
+                        });
+                        
+                        // Update pagination with total results
+                        totalResults = response.total_results;
+                        renderPagination(totalResults);
+                    } else {
+                        console.error("Invalid response format:", response);
+                        userTableBody.append('<tr><td colspan="6">No results found</td></tr>');
+                    }
+                },
+                error: function(xhr) {
+                    console.error("Search error:", xhr);
+                    $("#userTableBody").html(
+                        '<tr><td colspan="6">Error performing search</td></tr>'
+                    );
+                    alert("Error performing search: " + (xhr.responseJSON?.error || "Unknown error"));
                 }
             });
+        }
+
+        // Add debouncing to search input
+        let searchTimeout;
+        $("#searchUser").on('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(performSearch, 1000); // Wait 500ms after last keystroke
+        });
+
+        // Search button click handler
+        $("#searchButton").click(performSearch);
+
+        // Enter key press handler
+        $("#searchUser").keypress(function(event) {
+            if (event.keyCode === 13) { // Enter key
+                performSearch();
+            }
         });
 
         // Advanced search functionality
-        $("#advancedSearchButton").click(function() {
+        function performAdvancedSearch() {
             let email = $("#searchEmail").val();
             let phoneNumber = $("#searchPhoneNumber").val();
             let startTime = $("#searchStartTime").val();
@@ -259,28 +391,49 @@
                     start_time: startTime,
                     end_time: endTime,
                     updated_start_time: updatedStartTime,
-                    updated_end_time: updatedEndTime
+                    updated_end_time: updatedEndTime,
+                    page_number: currentPage,
+                    page_size: currentPageSize
                 },
                 success: function(data) {
-                    // Update the user table with the search results
-                    // Assuming data is an array of users
                     let userTableBody = $("#userTableBody");
                     userTableBody.empty();
-                    data.forEach(user => {
-                        userTableBody.append(`
-                            <tr>
-                                <td><input type="checkbox" class="user-checkbox"></td>
-                                <td>${user.id}</td>
-                                <td>${user.name} ${user.last_name}</td>
-                                <td>${user.email}</td>
-                                <td>${user.status}</td>
-                                <td><button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#userDetailsModal" onclick="showUserDetails('${user.id}')">View</button></td>
-                            </tr>
-                        `);
+                    data.results.forEach(user => {
+                        userTableBody.append(renderUserRow(user));
                     });
+                    totalResults = data.total_results;
+                    renderPagination(totalResults);
                     $("#advancedSearchModal").modal('hide');
                 }
             });
+        }
+
+        // Update advanced search button click handler
+        $("#advancedSearchButton").click(performAdvancedSearch);
+
+        // Add Enter key handler for advanced search form
+        $("#advancedSearchForm input").keypress(function(event) {
+            if (event.keyCode === 13) { // Enter key
+                event.preventDefault();
+                performAdvancedSearch();
+            }
+        });
+
+        // Add pagination click handler
+        $(document).on('click', '.pagination .page-link', function(e) {
+            e.preventDefault();
+            const newPage = $(this).data('page');
+            if (newPage && !$(this).parent().hasClass('disabled')) {
+                currentPage = newPage;
+                performSearch();
+            }
+        });
+
+        // Add page size change handler
+        $("#pageSize").change(function() {
+            currentPageSize = parseInt($(this).val());
+            currentPage = 1; // Reset to first page
+            performSearch();
         });
 
         // Function to show user details in modal

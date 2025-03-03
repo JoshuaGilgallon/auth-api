@@ -12,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var userCollection *mongo.Collection
@@ -190,14 +191,14 @@ func GetTotalUsers() (int64, error) {
 	return count, nil
 }
 
-func SearchUsersByFields(criteria models.UserSearchCriteria) ([]models.User, error) {
+func SearchUsersByFields(criteria models.UserAdvancedSearchCriteria) ([]models.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	orConditions := []bson.M{}
 
 	// Add name search conditions if provided
-	if (criteria.FirstName != "") {
+	if criteria.FirstName != "" {
 		orConditions = append(orConditions, bson.M{
 			"first_name": bson.M{
 				"$regex":   "(?i)" + regexp.QuoteMeta(criteria.FirstName),
@@ -206,7 +207,7 @@ func SearchUsersByFields(criteria models.UserSearchCriteria) ([]models.User, err
 		})
 	}
 
-	if (criteria.LastName != "") {
+	if criteria.LastName != "" {
 		orConditions = append(orConditions, bson.M{
 			"last_name": bson.M{
 				"$regex":   "(?i)" + regexp.QuoteMeta(criteria.LastName),
@@ -216,7 +217,7 @@ func SearchUsersByFields(criteria models.UserSearchCriteria) ([]models.User, err
 	}
 
 	// Handle email search with both partial and hash matching
-	if (criteria.Email != "") {
+	if criteria.Email != "" {
 		emailConditions := []bson.M{
 			// Match by partial email (for unencrypted emails)
 			{
@@ -234,7 +235,7 @@ func SearchUsersByFields(criteria models.UserSearchCriteria) ([]models.User, err
 	}
 
 	// Handle phone number search similarly
-	if (criteria.PhoneNumber != "") {
+	if criteria.PhoneNumber != "" {
 		phoneConditions := []bson.M{
 			// Match by partial phone number (for unencrypted numbers)
 			{
@@ -251,13 +252,13 @@ func SearchUsersByFields(criteria models.UserSearchCriteria) ([]models.User, err
 	}
 
 	filter := bson.M{}
-	if (len(orConditions) > 0) {
+	if len(orConditions) > 0 {
 		filter = bson.M{"$or": orConditions}
 	}
 
 	// Execute the query
 	cursor, err := userCollection.Find(ctx, filter)
-	if (err != nil) {
+	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
@@ -286,4 +287,95 @@ func SearchUsersByFields(criteria models.UserSearchCriteria) ([]models.User, err
 	}
 
 	return users, nil
+}
+
+func SimpleSearchUsers(searchTerm string, skip int64, limit int64) ([]models.User, int64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Create search conditions for all fields
+	orConditions := []bson.M{
+		// Name searches (case insensitive)
+		{
+			"first_name": bson.M{
+				"$regex":   "(?i)" + regexp.QuoteMeta(searchTerm),
+				"$options": "i",
+			},
+		},
+		{
+			"last_name": bson.M{
+				"$regex":   "(?i)" + regexp.QuoteMeta(searchTerm),
+				"$options": "i",
+			},
+		},
+		// Email conditions
+		{
+			"$or": []bson.M{
+				{
+					"email": bson.M{
+						"$regex":   "(?i)" + regexp.QuoteMeta(searchTerm),
+						"$options": "i",
+					},
+				},
+				{
+					"email_hash": utils.HashSHA(searchTerm),
+				},
+			},
+		},
+		// Phone number conditions
+		{
+			"$or": []bson.M{
+				{
+					"phone_number": bson.M{
+						"$regex": regexp.QuoteMeta(searchTerm),
+					},
+				},
+				{
+					"phone_number_hash": utils.HashSHA(searchTerm),
+				},
+			},
+		},
+	}
+
+	filter := bson.M{"$or": orConditions}
+
+	// First, get total count without pagination
+	total, err := userCollection.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Then get paginated results
+	options := options.Find().
+		SetSkip(skip).
+		SetLimit(limit)
+
+	cursor, err := userCollection.Find(ctx, filter, options)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer cursor.Close(ctx)
+
+	// Use map to deduplicate results
+	userMap := make(map[string]models.User)
+
+	for cursor.Next(ctx) {
+		var user models.User
+		if err := cursor.Decode(&user); err != nil {
+			return nil, 0, err
+		}
+		userMap[user.ID.Hex()] = user
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, 0, err
+	}
+
+	// Convert map to slice
+	users := make([]models.User, 0, len(userMap))
+	for _, user := range userMap {
+		users = append(users, user)
+	}
+
+	return users, total, nil
 }

@@ -59,6 +59,7 @@ func SetupRouter() *gin.Engine {
 		admin := api.Group("/admin")
 		{
 			admin.GET("/advancedSearch", handlers.AdvancedSearch)
+			admin.GET("/search", handlers.SimpleSearch)
 			admin.POST("/login", handlers.AdminLogin)
 			admin.POST("/logout", handlers.AdminLogout)
 			admin.POST("/create", handlers.CreateAdminAccount)
