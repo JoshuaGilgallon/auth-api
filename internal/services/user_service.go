@@ -193,22 +193,30 @@ func SearchUserByCredentials(search_term string) (models.User, error) {
 	return user, nil
 }
 
-func SearchUserByCreateTimeRange(start, end time.Time) ([]models.User, error) {
-	user_raw, err := repositories.GetUsersByTimeCreatedRange(start, end)
+func SearchUserByCreateTimeRange(start, end time.Time, pageNumber, pageSize int64) (SearchResult, error) {
+	if pageNumber <= 0 {
+		pageNumber = 1
+	}
+	if pageSize <= 0 {
+		pageSize = 10
+	}
+
+	skip := (pageNumber - 1) * pageSize
+	user_raw, total, err := repositories.GetUsersByTimeCreatedRange(start, end, skip, pageSize)
 	if err != nil {
-		return nil, err
+		return SearchResult{}, err
 	}
 
 	var users []models.User
 	for _, user_raw := range user_raw {
 		decrypted_email, err := utils.Decrypt(user_raw.Email)
 		if err != nil {
-			return nil, err
+			return SearchResult{}, err
 		}
 
 		decrypted_phone_number, err := utils.Decrypt(user_raw.PhoneNumber)
 		if err != nil {
-			return nil, err
+			return SearchResult{}, err
 		}
 
 		new_user_model := models.User{
@@ -231,25 +239,36 @@ func SearchUserByCreateTimeRange(start, end time.Time) ([]models.User, error) {
 		users = append(users, new_user_model)
 	}
 
-	return users, nil
+	return SearchResult{
+		Users:        users,
+		TotalResults: total,
+	}, nil
 }
 
-func SearchUsersByTimeUpdatedRange(start, end time.Time) ([]models.User, error) {
-	user_raw, err := repositories.GetUsersByTimeUpdatedRange(start, end)
+func SearchUsersByTimeUpdatedRange(start, end time.Time, pageNumber, pageSize int64) (SearchResult, error) {
+	if pageNumber <= 0 {
+		pageNumber = 1
+	}
+	if pageSize <= 0 {
+		pageSize = 10
+	}
+
+	skip := (pageNumber - 1) * pageSize
+	user_raw, total, err := repositories.GetUsersByTimeUpdatedRange(start, end, skip, pageSize)
 	if err != nil {
-		return nil, err
+		return SearchResult{}, err
 	}
 
 	var users []models.User
 	for _, user_raw := range user_raw {
 		decrypted_email, err := utils.Decrypt(user_raw.Email)
 		if err != nil {
-			return nil, err
+			return SearchResult{}, err
 		}
 
 		decrypted_phone_number, err := utils.Decrypt(user_raw.PhoneNumber)
 		if err != nil {
-			return nil, err
+			return SearchResult{}, err
 		}
 
 		new_user_model := models.User{
@@ -272,9 +291,11 @@ func SearchUsersByTimeUpdatedRange(start, end time.Time) ([]models.User, error) 
 		users = append(users, new_user_model)
 	}
 
-	return users, nil
+	return SearchResult{
+		Users:        users,
+		TotalResults: total,
+	}, nil
 }
-
 func GetCurrentUser(token string) (models.User, error) {
 	session, err := repositories.GetSessionByAccessToken(token)
 	if err != nil {
@@ -303,33 +324,60 @@ func GetCurrentUser(token string) (models.User, error) {
 	return user, nil
 }
 
-func SearchUsers(criteria models.UserAdvancedSearchCriteria) ([]models.User, error) {
+func SearchUsers(criteria models.UserAdvancedSearchCriteria) (SearchResult, error) {
+	// Set default pagination values if not provided
+	if criteria.PageNumber <= 0 {
+		criteria.PageNumber = 1
+	}
+	if criteria.PageSize <= 0 {
+		criteria.PageSize = 10
+	}
+
+	skip := (criteria.PageNumber - 1) * criteria.PageSize
 	var allUsers []models.User
+	var totalResults int64 = 0
 
 	// Search by time ranges if provided
 	if criteria.StartTime != nil && criteria.EndTime != nil {
-		users, err := repositories.GetUsersByTimeCreatedRange(*criteria.StartTime, *criteria.EndTime)
+		users, total, err := repositories.GetUsersByTimeCreatedRange(
+			*criteria.StartTime,
+			*criteria.EndTime,
+			skip,
+			criteria.PageSize,
+		)
 		if err != nil {
-			return nil, err
+			return SearchResult{}, err
 		}
 		allUsers = append(allUsers, users...)
+		totalResults = total
 	}
 
 	if criteria.UpdateStartTime != nil && criteria.UpdateEndTime != nil {
-		users, err := repositories.GetUsersByTimeUpdatedRange(*criteria.UpdateStartTime, *criteria.UpdateEndTime)
+		users, total, err := repositories.GetUsersByTimeUpdatedRange(
+			*criteria.UpdateStartTime,
+			*criteria.UpdateEndTime,
+			skip,
+			criteria.PageSize,
+		)
 		if err != nil {
-			return nil, err
+			return SearchResult{}, err
 		}
 		allUsers = append(allUsers, users...)
+		if total > totalResults {
+			totalResults = total
+		}
 	}
 
 	// Search by other criteria
 	if criteria.Email != "" || criteria.PhoneNumber != "" || criteria.FirstName != "" || criteria.LastName != "" {
-		users, err := repositories.SearchUsersByFields(criteria)
+		users, total, err := repositories.SearchUsersByFields(criteria)
 		if err != nil {
-			return nil, err
+			return SearchResult{}, err
 		}
 		allUsers = append(allUsers, users...)
+		if total > totalResults {
+			totalResults = total
+		}
 	}
 
 	// Process results
@@ -341,12 +389,12 @@ func SearchUsers(criteria models.UserAdvancedSearchCriteria) ([]models.User, err
 			// Decrypt sensitive fields
 			decryptedEmail, err := utils.Decrypt(user.Email)
 			if err != nil {
-				return nil, err
+				return SearchResult{}, err
 			}
 
 			decryptedPhone, err := utils.Decrypt(user.PhoneNumber)
 			if err != nil {
-				return nil, err
+				return SearchResult{}, err
 			}
 
 			user.Email = decryptedEmail
@@ -360,7 +408,10 @@ func SearchUsers(criteria models.UserAdvancedSearchCriteria) ([]models.User, err
 		}
 	}
 
-	return results, nil
+	return SearchResult{
+		Users:        results,
+		TotalResults: totalResults,
+	}, nil
 }
 
 func matchesCriteria(user models.User, criteria models.UserAdvancedSearchCriteria) bool {

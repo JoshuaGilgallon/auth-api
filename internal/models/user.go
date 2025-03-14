@@ -31,16 +31,16 @@ type User struct {
 }
 
 type UserAdvancedSearchCriteria struct {
-	FirstName       string     `bson:"first_name" json:"first_name"`
-	LastName        string     `bson:"last_name" json:"last_name"`
-	Email           string     `bson:"email" json:"email"`
-	PhoneNumber     string     `bson:"phone_number" json:"phone_number"`
-	StartTime       *time.Time `bson:"start_time" json:"start_time"`
-	EndTime         *time.Time `bson:"end_time" json:"end_time"`
-	UpdateStartTime *time.Time `bson:"update_start_time" json:"update_start_time"`
-	UpdateEndTime   *time.Time `bson:"update_end_time" json:"update_end_time"`
-	PageNumber      string     `bson:"page_number" json:"page_number"`
-	PageSize        string     `bson:"page_size" json:"page_size"`
+	FirstName       string     `json:"first_name"`
+	LastName        string     `json:"last_name"`
+	Email           string     `json:"email"`
+	PhoneNumber     string     `json:"phone_number"`
+	StartTime       *time.Time `json:"start_time"`
+	EndTime         *time.Time `json:"end_time"`
+	UpdateStartTime *time.Time `json:"update_start_time"`
+	UpdateEndTime   *time.Time `json:"update_end_time"`
+	PageNumber      int64      `form:"page_number" json:"page_number"`
+	PageSize        int64      `form:"page_size" json:"page_size"`
 }
 
 type UserSearchCriteria struct {

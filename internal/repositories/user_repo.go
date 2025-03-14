@@ -113,7 +113,7 @@ func GetUserByPhoneNumber(phoneNumber string) (models.User, error) {
 	return user, nil
 }
 
-func GetUsersByTimeCreatedRange(startTime, endTime time.Time) ([]models.User, error) {
+func GetUsersByTimeCreatedRange(startTime, endTime time.Time, skip int64, limit int64) ([]models.User, int64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -124,9 +124,20 @@ func GetUsersByTimeCreatedRange(startTime, endTime time.Time) ([]models.User, er
 		},
 	}
 
-	cursor, err := userCollection.Find(ctx, filter)
+	// Get total count first
+	total, err := userCollection.CountDocuments(ctx, filter)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
+	}
+
+	// Then get paginated results
+	options := options.Find().
+		SetSkip(skip).
+		SetLimit(limit)
+
+	cursor, err := userCollection.Find(ctx, filter, options)
+	if err != nil {
+		return nil, 0, err
 	}
 	defer cursor.Close(ctx)
 
@@ -134,19 +145,19 @@ func GetUsersByTimeCreatedRange(startTime, endTime time.Time) ([]models.User, er
 	for cursor.Next(ctx) {
 		var user models.User
 		if err := cursor.Decode(&user); err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		users = append(users, user)
 	}
 
 	if err := cursor.Err(); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return users, nil
+	return users, total, nil
 }
 
-func GetUsersByTimeUpdatedRange(startTime, endTime time.Time) ([]models.User, error) {
+func GetUsersByTimeUpdatedRange(startTime, endTime time.Time, skip int64, limit int64) ([]models.User, int64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -157,9 +168,20 @@ func GetUsersByTimeUpdatedRange(startTime, endTime time.Time) ([]models.User, er
 		},
 	}
 
-	cursor, err := userCollection.Find(ctx, filter)
+	// Get total count first
+	total, err := userCollection.CountDocuments(ctx, filter)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
+	}
+
+	// Then get paginated results
+	options := options.Find().
+		SetSkip(skip).
+		SetLimit(limit)
+
+	cursor, err := userCollection.Find(ctx, filter, options)
+	if err != nil {
+		return nil, 0, err
 	}
 	defer cursor.Close(ctx)
 
@@ -167,16 +189,16 @@ func GetUsersByTimeUpdatedRange(startTime, endTime time.Time) ([]models.User, er
 	for cursor.Next(ctx) {
 		var user models.User
 		if err := cursor.Decode(&user); err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		users = append(users, user)
 	}
 
 	if err := cursor.Err(); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return users, nil
+	return users, total, nil
 }
 
 func GetTotalUsers() (int64, error) {
@@ -191,7 +213,7 @@ func GetTotalUsers() (int64, error) {
 	return count, nil
 }
 
-func SearchUsersByFields(criteria models.UserAdvancedSearchCriteria) ([]models.User, error) {
+func SearchUsersByFields(criteria models.UserAdvancedSearchCriteria) ([]models.User, int64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -256,10 +278,24 @@ func SearchUsersByFields(criteria models.UserAdvancedSearchCriteria) ([]models.U
 		filter = bson.M{"$or": orConditions}
 	}
 
-	// Execute the query
-	cursor, err := userCollection.Find(ctx, filter)
+	// First get total count
+	total, err := userCollection.CountDocuments(ctx, filter)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
+	}
+
+	// Calculate skip value
+	skip := (criteria.PageNumber - 1) * criteria.PageSize
+
+	// Add pagination options
+	options := options.Find().
+		SetSkip(skip).
+		SetLimit(criteria.PageSize)
+
+	// Execute the query
+	cursor, err := userCollection.Find(ctx, filter, options)
+	if err != nil {
+		return nil, 0, err
 	}
 	defer cursor.Close(ctx)
 
@@ -269,7 +305,7 @@ func SearchUsersByFields(criteria models.UserAdvancedSearchCriteria) ([]models.U
 	for cursor.Next(ctx) {
 		var user models.User
 		if err := cursor.Decode(&user); err != nil {
-			return nil, err
+			return nil, total, err
 		}
 		// Use ID as key for deduplication
 		userMap[user.ID.Hex()] = user
@@ -277,7 +313,7 @@ func SearchUsersByFields(criteria models.UserAdvancedSearchCriteria) ([]models.U
 
 	err = cursor.Err()
 	if err != nil {
-		return nil, err
+		return nil, total, err
 	}
 
 	// Convert map back to slice
@@ -286,7 +322,7 @@ func SearchUsersByFields(criteria models.UserAdvancedSearchCriteria) ([]models.U
 		users = append(users, user)
 	}
 
-	return users, nil
+	return users, total, nil
 }
 
 func SimpleSearchUsers(searchTerm string, skip int64, limit int64) ([]models.User, int64, error) {

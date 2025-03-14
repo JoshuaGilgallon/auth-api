@@ -236,9 +236,14 @@
             $(".user-checkbox").prop('checked', $(this).prop('checked'));
         });
 
-        // Add this new function at the beginning of the script section
         function renderUserRow(user) {
-            const name = `${user.name || ''} ${user.last_name || ''}`.trim();
+            console.log('Rendering user:', user); // Debug log
+            
+            // Handle different name field formats
+            const firstName = user.first_name || user.name || '';
+            const lastName = user.last_name || '';
+            const name = `${firstName} ${lastName}`.trim();
+            
             const status = user.status || 'Unknown';
             const statusClass = {
                 'active': 'text-success',
@@ -246,16 +251,19 @@
                 'locked': 'text-danger'
             }[status.toLowerCase()] || 'text-secondary';
 
+            // Handle both string and ObjectID formats for user ID
+            const userId = user.id || user._id || '';
+
             return `
                 <tr>
-                    <td><input type="checkbox" class="user-checkbox" value="${user.id}"></td>
-                    <td>${user.id || ''}</td>
+                    <td><input type="checkbox" class="user-checkbox" value="${userId}"></td>
+                    <td>${userId}</td>
                     <td>${name}</td>
                     <td>${user.email || ''}</td>
                     <td><span class="${statusClass}">${status}</span></td>
                     <td>
                         <button class="btn btn-info btn-sm" 
-                                onclick="showUserDetails('${user.id}')">
+                                onclick="showUserDetails('${userId}')">
                             <i class="fas fa-eye"></i> View
                         </button>
                     </td>
@@ -263,12 +271,10 @@
             `;
         }
 
-        // Add these variables at the start of the script
         let currentPage = 1;
         let totalResults = 0;
         let currentPageSize = 10;
 
-        // Add pagination rendering function
         function renderPagination(total) {
             const totalPages = Math.max(1, Math.ceil(total / currentPageSize));
             const pagination = $("#pagination");
@@ -375,35 +381,62 @@
 
         // Advanced search functionality
         function performAdvancedSearch() {
-            let email = $("#searchEmail").val();
-            let phoneNumber = $("#searchPhoneNumber").val();
-            let startTime = $("#searchStartTime").val();
-            let endTime = $("#searchEndTime").val();
-            let updatedStartTime = $("#searchUpdatedStartTime").val();
-            let updatedEndTime = $("#searchUpdatedEndTime").val();
+            const searchParams = {
+                email: $("#searchEmail").val(),
+                phone_number: $("#searchPhoneNumber").val(),
+                start_time: $("#searchStartTime").val(),
+                end_time: $("#searchEndTime").val(),
+                updated_start_time: $("#searchUpdatedStartTime").val(),
+                updated_end_time: $("#searchUpdatedEndTime").val(),
+                page_number: currentPage,
+                page_size: currentPageSize
+            };
+
+            console.log('Advanced search params:', searchParams); // Debug log
 
             $.ajax({
                 url: "/api/admin/advancedSearch",
                 method: "GET",
-                data: {
-                    email: email,
-                    phone_number: phoneNumber,
-                    start_time: startTime,
-                    end_time: endTime,
-                    updated_start_time: updatedStartTime,
-                    updated_end_time: updatedEndTime,
-                    page_number: currentPage,
-                    page_size: currentPageSize
-                },
-                success: function(data) {
-                    let userTableBody = $("#userTableBody");
+                data: searchParams,
+                success: function(response) {
+                    console.log('Advanced search response:', response); // Debug log
+                    
+                    const userTableBody = $("#userTableBody");
                     userTableBody.empty();
-                    data.results.forEach(user => {
-                        userTableBody.append(renderUserRow(user));
-                    });
-                    totalResults = data.total_results;
-                    renderPagination(totalResults);
+                    
+                    // Check if response is empty
+                    if (!response || (!response.users && !response.results)) {
+                        userTableBody.append('<tr><td colspan="6">No results found</td></tr>');
+                        renderPagination(0);
+                        $("#advancedSearchModal").modal('hide');
+                        return;
+                    }
+
+                    // Handle both possible response formats
+                    const users = response.users || response.results;
+                    const total = response.total_results || response.total || 0;
+
+                    if (Array.isArray(users) && users.length > 0) {
+                        users.forEach(user => {
+                            userTableBody.append(renderUserRow(user));
+                        });
+                        
+                        // Update pagination with total results
+                        totalResults = total;
+                        renderPagination(totalResults);
+                    } else {
+                        userTableBody.append('<tr><td colspan="6">No results found</td></tr>');
+                        renderPagination(0);
+                    }
+                    
                     $("#advancedSearchModal").modal('hide');
+                },
+                error: function(xhr) {
+                    console.error("Advanced search error:", xhr);
+                    const userTableBody = $("#userTableBody");
+                    userTableBody.empty();
+                    userTableBody.append('<tr><td colspan="6">Error performing search</td></tr>');
+                    alert("Error performing advanced search: " + (xhr.responseJSON?.error || "Unknown error"));
                 }
             });
         }
@@ -419,14 +452,33 @@
             }
         });
 
-        // Add pagination click handler
+        let lastSearchType = 'simple'; // Track which search type was last used
+
         $(document).on('click', '.pagination .page-link', function(e) {
             e.preventDefault();
             const newPage = $(this).data('page');
             if (newPage && !$(this).parent().hasClass('disabled')) {
                 currentPage = newPage;
-                performSearch();
+                if (lastSearchType === 'advanced') {
+                    performAdvancedSearch();
+                } else {
+                    performSearch();
+                }
             }
+        });
+
+        // Update the advanced search button click handler
+        $("#advancedSearchButton").click(function() {
+            lastSearchType = 'advanced';
+            currentPage = 1; // Reset to first page
+            performAdvancedSearch();
+        });
+
+        // Update the simple search handlers
+        $("#searchButton").click(function() {
+            lastSearchType = 'simple';
+            currentPage = 1;
+            performSearch();
         });
 
         // Add page size change handler
