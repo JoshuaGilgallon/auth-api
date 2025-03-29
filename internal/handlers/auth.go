@@ -176,5 +176,37 @@ func SignUp(c *gin.Context) {
 // @Success 201
 // @Router /api/auth/csignup [post]
 func FinishSignup(c *gin.Context) {
-	c.JSON(http.StatusNotImplemented, gin.H{"error": "Not implemented"})
+	var userInput models.SetupUserInput
+
+	if err := c.ShouldBindJSON(&userInput); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
+
+	// sanitise inputs
+	userInput.FirstName = strings.TrimSpace(userInput.FirstName)
+	userInput.LastName = strings.TrimSpace(userInput.LastName)
+
+	// validate required fields
+	if userInput.FirstName == "" || userInput.LastName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "First name and last name are required"})
+		return
+	}
+
+	// check birthdate is in the YYY-MM-DD format
+	if !utils.IsValidDate(userInput.BirthDate) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid birthdate format"})
+		return
+	}
+
+	response, err := services.CompleteSignup(userInput)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to complete signup"})
+		log.Printf("Error completing signup: %v", err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"message": "Signup completed successfully", "access": response.AccessToken})
+
+	c.SetCookie("refresh_token", response.RefreshToken, int(response.RefreshExpiresAt.Unix()), "/", "", true, true)
 }

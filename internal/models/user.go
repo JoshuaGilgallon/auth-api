@@ -36,10 +36,10 @@ type UserInput struct {
 }
 
 type SetupUserInput struct {
-	FirstName   string `json:"name"`
-	LastName    string `json:"last_name"`
-	PhoneNumber string `json:"phone_number"`
-	BirthDate   string `json:"birth_date"`
+	FirstName string `json:"name"`
+	LastName  string `json:"last_name"`
+	BirthDate string `json:"birth_date"`
+	Token     string `json:"token"`
 }
 
 type FullUserInput struct {

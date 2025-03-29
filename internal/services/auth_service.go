@@ -55,3 +55,18 @@ func LoginWithEmailRef(input models.RefLoginInput) (models.Session, error) {
 func Logout(accessToken string) error {
 	return InvalidateSessionByToken(accessToken)
 }
+
+func CompleteSignup(input models.SetupUserInput) (models.Session, error) {
+	ID, err := GetIdFromCode(input.Token)
+	if err != nil {
+		return models.Session{}, errors.NewInvalidCredentialsError("Invalid Token. Please resend a verification email.", nil)
+	}
+
+	// Create session
+	session, err := CreateSession(ID)
+	if err != nil {
+		return models.Session{}, errors.NewFailedToCreateError("Failed to create session. Please wait a moment and try again, or contact support for assistance.", nil)
+	}
+
+	return session, nil
+}

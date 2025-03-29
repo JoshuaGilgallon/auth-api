@@ -56,11 +56,15 @@ USER_AES_KEY=<your aes-256 encryption key>
 RESEND_API_KEY=<your api key from resend>
 ROOT_ADMIN_USER=<admin_username_here>
 ROOT_ADMIN_PASSWORD=<admin_password_here>
+
+EMAIL_REDIRECT_BASE=<the base url for email redirects>
 ```
 
 Make sure you put your unique AES encryption key **INSIDE THE ENVIRONMENT FILE** and not inside the code. To generate a random secure key, visit [this website](https://generate-random.org/encryption-key-generator) - Leaving everything on default values.
 
 For the ROOT ADMIN user section; this will be the account that you log in to that will manage all the other admin users. It will have the highest clearance level. Make sure NOT to share the login details of this account anywhere. Logging into the admin portal through this account is the only way you can create new admin users.
+
+For the EMAIL REDIRECT BASE section; you will need to have a route defined on your front end which will allow a param to be placed after it continuing setup. For example, for ``test.com/v/:code`` - you would put ``test.com/v/`` as the env variable.
 
 ### Quick Start
 

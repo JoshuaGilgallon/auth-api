@@ -53,6 +53,13 @@ func SetupRouter() *gin.Engine {
 			auth.POST("/login", handlers.Login)
 			auth.POST("/logout", handlers.Logout)
 			auth.POST("/signup", handlers.SignUp)
+			auth.POST("/csignup", handlers.FinishSignup)
+		}
+
+		email := api.Group("/email")
+		{
+			email.GET("/verify/:code", handlers.EmailRedirect)
+			email.GET("/verify/NR/:code", handlers.EmailVerifyNoRedirect)
 		}
 
 		admin := api.Group("/admin")
@@ -65,6 +72,7 @@ func SetupRouter() *gin.Engine {
 			admin.GET("/validate", handlers.ValidateAdminSession)
 			admin.PATCH("/updateuser", handlers.AdminUpdateUser)
 		}
+
 		stats := api.Group("/stats")
 		{
 			stats.GET("/cache", handlers.GetCacheStats)

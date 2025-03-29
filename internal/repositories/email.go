@@ -9,6 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -60,6 +61,7 @@ func CreateVerificationEmail(input models.VerifEmailInput) (models.Email, error)
 	}
 
 	email := models.Email{
+		UserID:           user.ID,
 		Recipient:        user.Email,
 		Subject:          "Email Verification",
 		Body:             "Please verify your email by clicking the link below.",
@@ -75,4 +77,55 @@ func CreateVerificationEmail(input models.VerifEmailInput) (models.Email, error)
 	}
 
 	return email, nil
+}
+
+func VerifyEmail(code string) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var email models.Email
+	filter := bson.M{"code": code}
+	err := emailCollection.FindOne(ctx, filter).Decode(&email)
+	if err != nil {
+		log.Printf("Error finding verification code: %v", err)
+		return false, errors.Wrap(err, "failed to find verification code")
+	}
+
+	// update the user email verified status
+	user, err := GetUserByID(email.UserID.Hex())
+	if err != nil {
+		log.Printf("Error finding user: %v", err)
+		return false, errors.Wrap(err, "failed to find user")
+	}
+
+	user.EmailVerified = true
+	_, err = SaveUser(user)
+	if err != nil {
+		log.Printf("Error updating user: %v", err)
+		return false, errors.Wrap(err, "failed to update user")
+	}
+
+	// delete the verification code from the database
+	_, err = emailCollection.DeleteOne(ctx, filter)
+	if err != nil {
+		log.Printf("Error deleting verification code: %v", err)
+		return false, errors.Wrap(err, "failed to delete verification code")
+	}
+
+	return true, nil
+}
+
+func GetIdFromCode(code string) (primitive.ObjectID, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var email models.Email
+	filter := bson.M{"code": code}
+	err := emailCollection.FindOne(ctx, filter).Decode(&email)
+	if err != nil {
+		log.Printf("Error finding verification code: %v", err)
+		return primitive.NilObjectID, errors.Wrap(err, "failed to find verification code")
+	}
+
+	return email.UserID, nil
 }

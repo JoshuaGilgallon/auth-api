@@ -9,3 +9,8 @@ type LoginInput struct {
 type RefLoginInput struct {
 	RefCode string `json:"ref_code"`
 }
+
+type CompleteSignupResponse struct {
+	Success     bool   `json:"success"`
+	AccessToken string `json:"access_token"`
+}
