@@ -1,6 +1,12 @@
 package errors
 
 type ErrorType string
+
+// Error implements error.
+func (e ErrorType) Error() string {
+	panic("unimplemented")
+}
+
 type LoginErrorType string
 
 const (
@@ -23,7 +29,7 @@ const (
 
 	// Login specific errors
 	InvalidCredentials LoginErrorType = "INVALID_CREDENTIALS"
-	AccountLocked     LoginErrorType = "ACCOUNT_LOCKED"
-	AccountDisabled   LoginErrorType = "ACCOUNT_DISABLED"
-	TooManyAttempts   LoginErrorType = "TOO_MANY_ATTEMPTS"
+	AccountLocked      LoginErrorType = "ACCOUNT_LOCKED"
+	AccountDisabled    LoginErrorType = "ACCOUNT_DISABLED"
+	TooManyAttempts    LoginErrorType = "TOO_MANY_ATTEMPTS"
 )

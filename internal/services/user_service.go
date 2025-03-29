@@ -1,6 +1,7 @@
 package services
 
 import (
+	"auth-api/internal/errors"
 	"auth-api/internal/models"
 	"auth-api/internal/repositories"
 	"auth-api/internal/utils"
@@ -8,6 +9,8 @@ import (
 	"log"
 	"strings"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func CreateUser(input models.UserInput) (models.User, error) {
@@ -16,6 +19,12 @@ func CreateUser(input models.UserInput) (models.User, error) {
 
 	if err != nil {
 		return models.User{}, err
+	}
+
+	// check if user already exists
+	existingUser, err := repositories.GetUserByEmail(input.Email)
+	if err == nil && existingUser.ID != primitive.NilObjectID {
+		return models.User{}, errors.AlreadyExists
 	}
 
 	now := time.Now()
