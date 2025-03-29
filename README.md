@@ -16,8 +16,8 @@ This is an **Authorization API** template that I use as a starting point for all
 - **Built in Admin Dashboard with Analytics and Statistics**
 - **MongoDB Integrated** and already setup
 - **Salted Password Hashing**
-- **User Data AES-256 Encryption** supplied but optional, turned off by default.
-- **Multi-Factor Authentication (MFA) Support** via Email, SMS, and Authenticator Apps
+- **Email Verification** already setup!
+- **Multi-Factor Authentication (MFA) Support** via Email, but infrastructure allows for easy expansion.
 - **Rate Limiting & Brute Force Protection** plus a lot of other security precautions
 - **Swagger Documentation for Debugging** (Accessible at `/docs/index.html`)
 - **and much much more!**
@@ -58,7 +58,7 @@ ROOT_ADMIN_USER=<admin_username_here>
 ROOT_ADMIN_PASSWORD=<admin_password_here>
 
 BASE_URL=<the base url of your front end, e.g. example.com>
-EMAIL_REDIRECT_BASE=<the base url for email redirects>
+EMAIL_REDIRECT_BASE=<the base url for email redirects, e.g. example.com/email/redirect/token:>
 ```
 
 Make sure you put your unique AES encryption key **INSIDE THE ENVIRONMENT FILE** and not inside the code. To generate a random secure key, visit [this website](https://generate-random.org/encryption-key-generator) - Leaving everything on default values.
