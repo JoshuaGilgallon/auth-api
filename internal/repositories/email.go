@@ -38,10 +38,13 @@ func CreateVerificationEmail(input models.VerifEmailInput) (models.Email, error)
 	defer cancel()
 
 	// search for user id and get the email if it exists
-	var user models.User
-	err := emailCollection.FindOne(ctx, bson.M{"_id": input.UserID}).Decode(&user)
+
+	log.Printf("User id: %s", input.UserID)
+
+	user, err := GetUserByID(input.UserID)
 	if err != nil {
-		return models.Email{}, errors.Wrap(err, "Failed to find user")
+		log.Printf("Error finding user: %v", err)
+		return models.Email{}, errors.Wrap(err, "failed to find user")
 	}
 
 	// if the users email is already verified, return error message

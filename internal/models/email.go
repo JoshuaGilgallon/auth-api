@@ -7,7 +7,7 @@ import (
 )
 
 type VerifEmailInput struct {
-	UserID string `bson:"recipient" json:"recipient"`
+	UserID string `bson:"user_id" json:"user_id"`
 }
 
 type Email struct {

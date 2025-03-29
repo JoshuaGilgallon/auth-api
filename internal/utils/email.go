@@ -2,6 +2,7 @@ package utils
 
 import (
 	"auth-api/internal/models"
+	"log"
 	"os"
 
 	"github.com/resendlabs/resend-go"
@@ -20,5 +21,6 @@ func SendEmail(email models.Email) error {
 	}
 
 	_, err := client.Emails.Send(params)
+	log.Printf("Err sending email: %v", err)
 	return err
 }

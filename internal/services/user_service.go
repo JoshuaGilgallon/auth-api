@@ -43,9 +43,13 @@ func CreateUser(input models.UserInput) (models.User, error) {
 	// 	user.BirthDate = birthDate
 	// }
 
-	repositories.SaveUser(user)
+	saved_user, err := repositories.SaveUser(user)
+	if err != nil {
+		log.Printf("Error saving user: %v", err)
+		return models.User{}, fmt.Errorf("failed to save user: %w", err)
+	}
 
-	return user, nil
+	return saved_user, nil
 }
 
 func UpdateUser(id string, input models.FullUserInput) (models.User, error) {

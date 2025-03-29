@@ -6,6 +6,7 @@ import (
 	"auth-api/internal/repositories"
 	"auth-api/internal/services"
 	"auth-api/internal/utils"
+	"log"
 	"net/http"
 	"strings"
 
@@ -143,12 +144,20 @@ func SignUp(c *gin.Context) {
 		return
 	}
 
-	// send the verification email
+	log.Printf("User created: %v", user)
+	log.Printf("User ID: %s", user.ID.Hex())
+
 	verifEmail := models.VerifEmailInput{
 		UserID: user.ID.Hex(),
 	}
 
-	services.CreateVerifEmail(verifEmail)
+	response, err := services.CreateVerifEmail(verifEmail)
+	if err != nil {
+		log.Printf("Error sending verification email: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send verification email"})
+		return
+	}
+	log.Printf("Response %v", response)
 
 	user_return := models.UserCreateReturn{
 		Success: true,
