@@ -19,7 +19,6 @@ type User struct {
 	LastName      string             `bson:"last_name" json:"last_name"`
 	Email         string             `bson:"email" json:"email"`
 	EmailVerified bool               `bson:"email_verified" json:"email_verified"`
-	PhoneNumber   string             `bson:"phone_number" json:"phone_number"`
 	Password      string             `bson:"password" json:"password"`
 	Bio           string             `bson:"bio" json:"bio"`
 	BirthDate     time.Time          `bson:"birth_date" json:"birth_date"`
@@ -43,14 +42,13 @@ type SetupUserInput struct {
 }
 
 type FullUserInput struct {
-	FirstName   string `json:"name"`
-	LastName    string `json:"last_name"`
-	Email       string `json:"email"`
-	PhoneNumber string `json:"phone_number"`
-	Password    string `json:"password"`
-	BirthDate   string `json:"birth_date"`
-	Language    string `json:"language"`
-	MFAEnabled  bool   `json:"mfa_enabled"`
+	FirstName  string `json:"name"`
+	LastName   string `json:"last_name"`
+	Email      string `json:"email"`
+	Password   string `json:"password"`
+	BirthDate  string `json:"birth_date"`
+	Language   string `json:"language"`
+	MFAEnabled bool   `json:"mfa_enabled"`
 }
 
 type UserCreateReturn struct {
@@ -62,7 +60,6 @@ type UserAdvancedSearchCriteria struct {
 	FirstName       string     `json:"first_name"`
 	LastName        string     `json:"last_name"`
 	Email           string     `json:"email"`
-	PhoneNumber     string     `json:"phone_number"`
 	StartTime       *time.Time `json:"start_time"`
 	EndTime         *time.Time `json:"end_time"`
 	UpdateStartTime *time.Time `json:"update_start_time"`

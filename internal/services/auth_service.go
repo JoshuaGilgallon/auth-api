@@ -10,15 +10,9 @@ import (
 func Login(input models.LoginInput) (models.Session, error) {
 	var user models.User
 
-	// Try to get the user by Email first
 	user, err := repositories.GetUserByEmail(input.Email)
 	if err != nil || user.ID.IsZero() {
-		// If not found, try by phone number
-		user, err = repositories.GetUserByPhoneNumber(input.PhoneNumber)
-		if err != nil || user.ID.IsZero() {
-			return models.Session{}, errors.NewInvalidCredentialsError("Incorrect Login Credentials", nil)
-		}
-	} else {
+		return models.Session{}, errors.NewInvalidCredentialsError("Incorrect Login Credentials", nil)
 	}
 
 	// Validate password

@@ -127,10 +127,6 @@
                             <input type="email" class="form-control" id="searchEmail">
                         </div>
                         <div class="mb-3">
-                            <label for="searchPhoneNumber" class="form-label">Phone Number</label>
-                            <input type="text" class="form-control" id="searchPhoneNumber">
-                        </div>
-                        <div class="mb-3">
                             <label for="searchStartTime" class="form-label">Start Time</label>
                             <input type="datetime-local" class="form-control" id="searchStartTime">
                         </div>
@@ -197,10 +193,6 @@
                         <div class="mb-3">
                             <label for="editEmail" class="form-label">Email</label>
                             <input type="email" class="form-control" id="editEmail">
-                        </div>
-                        <div class="mb-3">
-                            <label for="editPhoneNumber" class="form-label">Phone Number</label>
-                            <input type="text" class="form-control" id="editPhoneNumber">
                         </div>
                         <div class="mb-3">
                             <label for="editBirthDate" class="form-label">Birth Date</label>
@@ -383,7 +375,6 @@
         function performAdvancedSearch() {
             const searchParams = {
                 email: $("#searchEmail").val(),
-                phone_number: $("#searchPhoneNumber").val(),
                 start_time: $("#searchStartTime").val(),
                 end_time: $("#searchEndTime").val(),
                 updated_start_time: $("#searchUpdatedStartTime").val(),
@@ -518,7 +509,6 @@
             $("#editFirstName").val(userData.name || '');  // Changed from first_name to name
             $("#editLastName").val(userData.last_name || '');
             $("#editEmail").val(userData.email || '');
-            $("#editPhoneNumber").val(userData.phone_number || '');
             $("#editBirthDate").val(userData.birth_date ? userData.birth_date.split('T')[0] : '');
             $("#editLanguage").val(userData.language || '');
             $("#editMFAEnabled").prop('checked', !!userData.mfa_enabled);
@@ -536,7 +526,6 @@
                 name: $("#editFirstName").val().trim(),  // Changed from first_name to name
                 last_name: $("#editLastName").val().trim(),
                 email: $("#editEmail").val().trim(),
-                phone_number: $("#editPhoneNumber").val().trim(),
                 birth_date: $("#editBirthDate").val(),
                 language: $("#editLanguage").val().trim(),
                 mfa_enabled: $("#editMFAEnabled").is(':checked')

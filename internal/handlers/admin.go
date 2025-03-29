@@ -18,7 +18,6 @@ import (
 // @Accept json
 // @Produce json
 // @Param email query string false "Email"
-// @Param phone_number query string false "Phone Number"
 // @Param start_time query string false "Start Time" format(date-time)
 // @Param end_time query string false "End Time" format(date-time)
 // @Param updated_start_time query string false "Updated Start Time" format(date-time)
@@ -37,10 +36,9 @@ func AdvancedSearch(c *gin.Context) {
 
 	// Build search criteria
 	criteria := models.UserAdvancedSearchCriteria{
-		FirstName:   strings.TrimSpace(c.Query("first_name")),
-		LastName:    strings.TrimSpace(c.Query("last_name")),
-		Email:       strings.TrimSpace(c.Query("email")),
-		PhoneNumber: strings.TrimSpace(c.Query("phone_number")),
+		FirstName: strings.TrimSpace(c.Query("first_name")),
+		LastName:  strings.TrimSpace(c.Query("last_name")),
+		Email:     strings.TrimSpace(c.Query("email")),
 	}
 
 	// Parse time parameters

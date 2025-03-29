@@ -31,11 +31,9 @@ func Login(c *gin.Context) {
 
 	// Sanitize inputs
 	loginInput.Email = strings.TrimSpace(loginInput.Email)
-	loginInput.PhoneNumber = strings.TrimSpace(loginInput.PhoneNumber)
 
-	// Validate that at least one login method is provided
-	if loginInput.Email == "" && loginInput.PhoneNumber == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Email or phone number is required"})
+	if loginInput.Email == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email is required"})
 		return
 	}
 
@@ -132,7 +130,7 @@ func SignUp(c *gin.Context) {
 		case *errors.UserError:
 			switch e.Type {
 			case errors.AlreadyExists:
-				c.JSON(http.StatusConflict, gin.H{"error": "Email or phone number already exists"})
+				c.JSON(http.StatusConflict, gin.H{"error": "Email already exists"})
 			case errors.ValidationError:
 				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input data"})
 			default:

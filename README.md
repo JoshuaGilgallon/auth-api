@@ -97,14 +97,7 @@ When a user is created the following will happen:
 
 1. **Endpoint Called**
 2. **User Password Hashed**
-3. **User Email and Phone number encrypted with AES-256** - optional
-4. **Information sent to database for storage**
-
-When a user is fetched the following will happen
-
-1. **Endpoint Called**
-2. **User Email and Phone Number decrypted with AES-256** - again optional
-3. **Information displayed** 
+3. **Information sent to database for storage**
 
 ---
 

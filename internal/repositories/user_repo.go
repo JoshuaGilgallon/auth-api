@@ -90,24 +90,6 @@ func GetUserByEmail(email string) (models.User, error) {
 	return user, nil
 }
 
-func GetUserByPhoneNumber(phoneNumber string) (models.User, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	var user models.User
-	filter := bson.M{"phone_number": phoneNumber}
-	err := userCollection.FindOne(ctx, filter).Decode(&user)
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			log.Printf("user not found with phone number: %s", phoneNumber)
-			return models.User{}, err
-		}
-		return models.User{}, err
-	}
-
-	return user, nil
-}
-
 func GetUsersByTimeCreatedRange(startTime, endTime time.Time, skip int64, limit int64) ([]models.User, int64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -233,7 +215,6 @@ func SearchUsersByFields(criteria models.UserAdvancedSearchCriteria) ([]models.U
 		})
 	}
 
-	// Handle email search with both partial and hash matching
 	if criteria.Email != "" {
 		emailConditions := []bson.M{
 			{
@@ -244,19 +225,6 @@ func SearchUsersByFields(criteria models.UserAdvancedSearchCriteria) ([]models.U
 			},
 		}
 		orConditions = append(orConditions, bson.M{"$or": emailConditions})
-	}
-
-	// Handle phone number search similarly
-	if criteria.PhoneNumber != "" {
-		phoneConditions := []bson.M{
-			// Match by partial phone number (for unencrypted numbers)
-			{
-				"phone_number": bson.M{
-					"$regex": regexp.QuoteMeta(criteria.PhoneNumber),
-				},
-			},
-		}
-		orConditions = append(orConditions, bson.M{"$or": phoneConditions})
 	}
 
 	filter := bson.M{}
@@ -337,16 +305,6 @@ func SimpleSearchUsers(searchTerm string, skip int64, limit int64) ([]models.Use
 					"email": bson.M{
 						"$regex":   "(?i)" + regexp.QuoteMeta(searchTerm),
 						"$options": "i",
-					},
-				},
-			},
-		},
-		// Phone number conditions
-		{
-			"$or": []bson.M{
-				{
-					"phone_number": bson.M{
-						"$regex": regexp.QuoteMeta(searchTerm),
 					},
 				},
 			},

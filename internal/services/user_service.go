@@ -24,24 +24,23 @@ func CreateUser(input models.UserInput) (models.User, error) {
 	// check if user already exists
 	existingUser, err := repositories.GetUserByEmail(input.Email)
 	if err == nil && existingUser.ID != primitive.NilObjectID {
-		return models.User{}, errors.AlreadyExists
+		return models.User{}, errors.NewAlreadyExistsError("User with this email already exists", nil)
 	}
 
 	now := time.Now()
 
 	user := models.User{
-		FirstName:   "",
-		LastName:    "",
-		Email:       input.Email,
-		PhoneNumber: "",
-		Password:    hashedPassword,
-		Bio:         "",
-		BirthDate:   time.Time{}, // Initialize with zero value
-		Language:    "EN_us",
-		CreatedAt:   now,
-		UpdatedAt:   now,
-		MFAEnabled:  false,
-		Status:      models.StatusPending, // set the status to pending by default because they still have to verify and put all their other info in
+		FirstName:  "",
+		LastName:   "",
+		Email:      input.Email,
+		Password:   hashedPassword,
+		Bio:        "",
+		BirthDate:  time.Time{}, // Initialize with zero value
+		Language:   "EN_us",
+		CreatedAt:  now,
+		UpdatedAt:  now,
+		MFAEnabled: false,
+		Status:     models.StatusPending, // set the status to pending by default because they still have to verify and put all their other info in
 	}
 
 	// if input.BirthDate != "" {
@@ -121,11 +120,7 @@ func SearchUserByCredentials(search_term string) (models.User, error) {
 	// get user with matching email
 	user, err := repositories.GetUserByEmail(search_term)
 	if err != nil {
-		// if user not found with email, try searching by phone number
-		user, err = repositories.GetUserByPhoneNumber(search_term)
-		if err != nil {
-			return models.User{}, err
-		}
+		return models.User{}, err
 	}
 
 	return user, nil
@@ -239,7 +234,7 @@ func SearchUsers(criteria models.UserAdvancedSearchCriteria) (SearchResult, erro
 	}
 
 	// Search by other criteria
-	if criteria.Email != "" || criteria.PhoneNumber != "" || criteria.FirstName != "" || criteria.LastName != "" {
+	if criteria.Email != "" || criteria.FirstName != "" || criteria.LastName != "" {
 		users, total, err := repositories.SearchUsersByFields(criteria)
 		if err != nil {
 			return SearchResult{}, err
@@ -278,9 +273,6 @@ func matchesCriteria(user models.User, criteria models.UserAdvancedSearchCriteri
 		return false
 	}
 	if criteria.Email != "" && !strings.Contains(strings.ToLower(user.Email), strings.ToLower(criteria.Email)) {
-		return false
-	}
-	if criteria.PhoneNumber != "" && !strings.Contains(user.PhoneNumber, criteria.PhoneNumber) {
 		return false
 	}
 	return true
