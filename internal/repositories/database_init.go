@@ -43,6 +43,8 @@ func InitDatabase(config *internalconfig.DatabaseConfig) error {
 
 	SetStatsCollection(db.Collection("stats"))
 
+	SetEmailCollection(db.Collection("emails"))
+
 	// Initialize login stats
 	if err := InitLoginStats(); err != nil {
 		return err

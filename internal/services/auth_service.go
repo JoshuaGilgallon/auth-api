@@ -7,13 +7,7 @@ import (
 	"auth-api/internal/utils"
 )
 
-type LoginInput struct {
-	Email       string `json:"email"`
-	PhoneNumber string `json:"phone_number"`
-	Password    string `json:"password"`
-}
-
-func Login(input LoginInput) (models.Session, error) {
+func Login(input models.LoginInput) (models.Session, error) {
 	var user models.User
 
 	// Try to get the user by Email first
@@ -30,6 +24,23 @@ func Login(input LoginInput) (models.Session, error) {
 	// Validate password
 	if !utils.ValidateBcrypt(input.Password, user.Password) {
 		return models.Session{}, errors.NewInvalidCredentialsError("The Password is Incorrect", nil)
+	}
+
+	// Create session
+	session, err := CreateSession(user.ID)
+	if err != nil {
+		return models.Session{}, errors.NewFailedToCreateError("Failed to create session. Please wait a moment and try again, or contact support for assistance.", nil)
+	}
+
+	return session, nil
+}
+
+func LoginWithEmailRef(input models.RefLoginInput) (models.Session, error) {
+	var user models.User
+
+	valid, err := repositories.ValidateRefCode(input.RefCode)
+	if err != nil || !valid {
+		return models.Session{}, errors.NewInvalidCredentialsError("Invalid Referral Code. Please resend a verification email.", nil)
 	}
 
 	// Create session

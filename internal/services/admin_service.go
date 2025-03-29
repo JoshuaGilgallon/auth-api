@@ -30,7 +30,7 @@ func CreateAdminSession(adminID primitive.ObjectID) (models.AdminSession, error)
 	sessionLock.Lock()
 	defer sessionLock.Unlock()
 
-	accessToken, err := generateSecureToken()
+	accessToken, err := utils.GenToken()
 	if err != nil {
 		return models.AdminSession{}, err
 	}

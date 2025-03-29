@@ -53,6 +53,7 @@ Set it up as so:
 ```env
 DATABASE_URI=<your database uri>
 USER_AES_KEY=<your aes-256 encryption key>
+RESEND_API_KEY=<your api key from resend>
 ROOT_ADMIN_USER=<admin_username_here>
 ROOT_ADMIN_PASSWORD=<admin_password_here>
 ```

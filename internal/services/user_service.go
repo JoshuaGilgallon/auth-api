@@ -10,18 +10,7 @@ import (
 	"time"
 )
 
-type UserInput struct {
-	FirstName   string `json:"name"` // This field maps to "name" in JSON
-	LastName    string `json:"last_name"`
-	Email       string `json:"email"`
-	PhoneNumber string `json:"phone_number"`
-	Password    string `json:"password"`
-	BirthDate   string `json:"birth_date"`
-	Language    string `json:"language"`
-	MFAEnabled  bool   `json:"mfa_enabled"`
-}
-
-func CreateUser(input UserInput) (models.User, error) {
+func CreateUser(input models.UserInput) (models.User, error) {
 	// hash password before saving
 	hashedPassword, err := utils.HashBcrypt(input.Password)
 
@@ -29,51 +18,37 @@ func CreateUser(input UserInput) (models.User, error) {
 		return models.User{}, err
 	}
 
-	// encrypt the email and phone number before saving
-	encryptedPhoneNumber, err := utils.Encrypt(input.PhoneNumber)
-	if err != nil {
-		return models.User{}, err
-	}
-
-	hashedPhoneNumber := utils.HashSHA(input.PhoneNumber)
-
-	encryptedEmail, err := utils.Encrypt(input.Email)
-	if err != nil {
-		return models.User{}, err
-	}
-
-	hashedEmail := utils.HashSHA(input.Email)
-
 	now := time.Now()
+
 	user := models.User{
-		FirstName:       input.FirstName,
-		LastName:        input.LastName,
-		Email:           encryptedEmail,
-		EmailHash:       hashedEmail,
-		PhoneNumber:     encryptedPhoneNumber,
-		PhoneNumberHash: hashedPhoneNumber,
-		Password:        hashedPassword,
-		Bio:             "",
-		BirthDate:       time.Time{}, // Initialize with zero value
-		Language:        input.Language,
-		CreatedAt:       now,
-		UpdatedAt:       now,
-		MFAEnabled:      input.MFAEnabled,
-		Status:          models.StatusActive, // set the status to active by default
+		FirstName:   "",
+		LastName:    "",
+		Email:       input.Email,
+		PhoneNumber: "",
+		Password:    hashedPassword,
+		Bio:         "",
+		BirthDate:   time.Time{}, // Initialize with zero value
+		Language:    "EN_us",
+		CreatedAt:   now,
+		UpdatedAt:   now,
+		MFAEnabled:  false,
+		Status:      models.StatusPending, // set the status to pending by default because they still have to verify and put all their other info in
 	}
 
-	if input.BirthDate != "" {
-		birthDate, err := time.Parse("2006-01-02", input.BirthDate)
-		if err != nil {
-			return models.User{}, err
-		}
-		user.BirthDate = birthDate
-	}
+	// if input.BirthDate != "" {
+	// 	birthDate, err := time.Parse("2006-01-02", input.BirthDate)
+	// 	if err != nil {
+	// 		return models.User{}, err
+	// 	}
+	// 	user.BirthDate = birthDate
+	// }
 
-	return repositories.SaveUser(user)
+	repositories.SaveUser(user)
+
+	return user, nil
 }
 
-func UpdateUser(id string, input UserInput) (models.User, error) {
+func UpdateUser(id string, input models.FullUserInput) (models.User, error) {
 	existingUser, err := repositories.GetUserByID(id)
 	if err != nil {
 		log.Printf("Error fetching user %s: %v", id, err)
@@ -85,26 +60,6 @@ func UpdateUser(id string, input UserInput) (models.User, error) {
 	}
 	if input.LastName != "" {
 		existingUser.LastName = input.LastName
-	}
-	if input.Email != "" {
-		// Encrypt and hash email
-		encryptedEmail, err := utils.Encrypt(input.Email)
-		if err != nil {
-			log.Printf("Error encrypting email for user %s: %v", id, err)
-			return models.User{}, fmt.Errorf("failed to encrypt email: %w", err)
-		}
-		existingUser.Email = encryptedEmail
-		existingUser.EmailHash = utils.HashSHA(strings.ToLower(input.Email)) // Hash lowercase email
-	}
-	if input.PhoneNumber != "" {
-		// Encrypt and hash phone number
-		encryptedPhone, err := utils.Encrypt(input.PhoneNumber)
-		if err != nil {
-			log.Printf("Error encrypting phone for user %s: %v", id, err)
-			return models.User{}, fmt.Errorf("failed to encrypt phone: %w", err)
-		}
-		existingUser.PhoneNumber = encryptedPhone
-		existingUser.PhoneNumberHash = utils.HashSHA(input.PhoneNumber)
 	}
 	if input.Password != "" {
 		// Hash new password
@@ -146,20 +101,6 @@ func GetUser(id string) (models.User, error) {
 		return models.User{}, err
 	}
 
-	// decrypt email
-	decryptedEmail, err := utils.Decrypt(user.Email)
-	if err != nil {
-		return models.User{}, err
-	}
-	user.Email = decryptedEmail
-
-	// decrypt phone number
-	decryptedPhone, err := utils.Decrypt(user.PhoneNumber)
-	if err != nil {
-		return models.User{}, err
-	}
-	user.PhoneNumber = decryptedPhone
-
 	return user, nil
 }
 
@@ -173,22 +114,6 @@ func SearchUserByCredentials(search_term string) (models.User, error) {
 			return models.User{}, err
 		}
 	}
-
-	// decrypt email
-	decryptedEmail, err := utils.Decrypt(user.Email)
-	if err != nil {
-		return models.User{}, err
-	}
-
-	user.Email = decryptedEmail
-
-	// decrypt phone number
-	decryptedPhoneNumber, err := utils.Decrypt(user.PhoneNumber)
-	if err != nil {
-		return models.User{}, err
-	}
-
-	user.PhoneNumber = decryptedPhoneNumber
 
 	return user, nil
 }
@@ -207,36 +132,9 @@ func SearchUserByCreateTimeRange(start, end time.Time, pageNumber, pageSize int6
 		return SearchResult{}, err
 	}
 
-	var users []models.User
-	for _, user_raw := range user_raw {
-		decrypted_email, err := utils.Decrypt(user_raw.Email)
-		if err != nil {
-			return SearchResult{}, err
-		}
-
-		decrypted_phone_number, err := utils.Decrypt(user_raw.PhoneNumber)
-		if err != nil {
-			return SearchResult{}, err
-		}
-
-		new_user_model := models.User{
-			ID:              user_raw.ID,
-			FirstName:       user_raw.FirstName,
-			LastName:        user_raw.LastName,
-			Email:           decrypted_email,
-			EmailHash:       user_raw.EmailHash,
-			PhoneNumber:     decrypted_phone_number,
-			PhoneNumberHash: user_raw.PhoneNumberHash,
-			Password:        user_raw.Password,
-			Bio:             user_raw.Bio,
-			BirthDate:       user_raw.BirthDate,
-			Language:        user_raw.Language,
-			CreatedAt:       user_raw.CreatedAt,
-			UpdatedAt:       user_raw.UpdatedAt,
-			MFAEnabled:      user_raw.MFAEnabled,
-			Status:          user_raw.Status,
-		}
-		users = append(users, new_user_model)
+	users := make([]models.User, len(user_raw))
+	for i, raw := range user_raw {
+		users[i] = models.User(raw)
 	}
 
 	return SearchResult{
@@ -259,36 +157,9 @@ func SearchUsersByTimeUpdatedRange(start, end time.Time, pageNumber, pageSize in
 		return SearchResult{}, err
 	}
 
-	var users []models.User
-	for _, user_raw := range user_raw {
-		decrypted_email, err := utils.Decrypt(user_raw.Email)
-		if err != nil {
-			return SearchResult{}, err
-		}
-
-		decrypted_phone_number, err := utils.Decrypt(user_raw.PhoneNumber)
-		if err != nil {
-			return SearchResult{}, err
-		}
-
-		new_user_model := models.User{
-			ID:              user_raw.ID,
-			FirstName:       user_raw.FirstName,
-			LastName:        user_raw.LastName,
-			Email:           decrypted_email,
-			EmailHash:       user_raw.EmailHash,
-			PhoneNumber:     decrypted_phone_number,
-			PhoneNumberHash: user_raw.PhoneNumberHash,
-			Password:        user_raw.Password,
-			Bio:             user_raw.Bio,
-			BirthDate:       user_raw.BirthDate,
-			Language:        user_raw.Language,
-			CreatedAt:       user_raw.CreatedAt,
-			UpdatedAt:       user_raw.UpdatedAt,
-			MFAEnabled:      user_raw.MFAEnabled,
-			Status:          user_raw.Status,
-		}
-		users = append(users, new_user_model)
+	users := make([]models.User, len(user_raw))
+	for i, raw := range user_raw {
+		users[i] = models.User(raw)
 	}
 
 	return SearchResult{
@@ -306,20 +177,6 @@ func GetCurrentUser(token string) (models.User, error) {
 	if err != nil {
 		return models.User{}, err
 	}
-
-	// decrypt email
-	decryptedEmail, err := utils.Decrypt(user.Email)
-	if err != nil {
-		return models.User{}, err
-	}
-	user.Email = decryptedEmail
-
-	// decrypt phone number
-	decryptedPhoneNumber, err := utils.Decrypt(user.PhoneNumber)
-	if err != nil {
-		return models.User{}, err
-	}
-	user.PhoneNumber = decryptedPhoneNumber
 
 	return user, nil
 }
@@ -386,20 +243,6 @@ func SearchUsers(criteria models.UserAdvancedSearchCriteria) (SearchResult, erro
 
 	for _, user := range allUsers {
 		if !processedIDs[user.ID.Hex()] {
-			// Decrypt sensitive fields
-			decryptedEmail, err := utils.Decrypt(user.Email)
-			if err != nil {
-				return SearchResult{}, err
-			}
-
-			decryptedPhone, err := utils.Decrypt(user.PhoneNumber)
-			if err != nil {
-				return SearchResult{}, err
-			}
-
-			user.Email = decryptedEmail
-			user.PhoneNumber = decryptedPhone
-
 			// Add to results if matches criteria
 			if matchesCriteria(user, criteria) {
 				results = append(results, user)
@@ -440,23 +283,6 @@ func SimpleSearch(searchTerm string, pageNum int64, pageSize int64) (SearchResul
 	users, total, err := repositories.SimpleSearchUsers(searchTerm, skip, pageSize)
 	if err != nil {
 		return SearchResult{}, err
-	}
-
-	// Decrypt sensitive information for each user
-	for i := range users {
-		// Decrypt email
-		decryptedEmail, err := utils.Decrypt(users[i].Email)
-		if err != nil {
-			return SearchResult{}, err
-		}
-		users[i].Email = decryptedEmail
-
-		// Decrypt phone number
-		decryptedPhone, err := utils.Decrypt(users[i].PhoneNumber)
-		if err != nil {
-			return SearchResult{}, err
-		}
-		users[i].PhoneNumber = decryptedPhone
 	}
 
 	return SearchResult{

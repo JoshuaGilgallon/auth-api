@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"auth-api/internal/errors"
+	"auth-api/internal/models"
 	"auth-api/internal/services"
 	"auth-api/internal/utils"
 	"log"
@@ -10,58 +11,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
-
-// @Summary Create user
-// @Description Create a new user
-// @Tags users
-// @Accept json
-// @Produce json
-// @Param user body services.UserInput true "User input data"
-// @Success 201 {object} string "user created"
-// @Router /api/user [post]
-func CreateUser(c *gin.Context) {
-	var userInput services.UserInput
-	if err := c.ShouldBindJSON(&userInput); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
-		return
-	}
-
-	// Sanitize inputs
-	userInput.Email = strings.TrimSpace(userInput.Email)
-	userInput.PhoneNumber = strings.TrimSpace(userInput.PhoneNumber)
-
-	// Validate required fields
-	if userInput.Email == "" && userInput.PhoneNumber == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Email or phone number is required"})
-		return
-	}
-
-	if !utils.IsValidPassword(userInput.Password) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Password does not meet security requirements"})
-		return
-	}
-
-	user, err := services.CreateUser(userInput)
-	if err != nil {
-
-		switch e := err.(type) {
-		case *errors.UserError:
-			switch e.Type {
-			case errors.AlreadyExists:
-				c.JSON(http.StatusConflict, gin.H{"error": "User already exists"})
-			case errors.ValidationError:
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input data"})
-			default:
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
-			}
-		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
-		}
-		return
-	}
-
-	c.JSON(http.StatusCreated, user)
-}
 
 // @Summary Get user by ID
 // @Description Get a user by their ID
@@ -152,7 +101,7 @@ func GetCurrentUser(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "User ID"
-// @Param user body services.UserInput true "User input data"
+// @Param user body models.UserInput true "User input data"
 // @Success 200 {object} models.User
 // @Router /api/admin/updateuser [patch]
 func AdminUpdateUser(c *gin.Context) {
@@ -170,7 +119,7 @@ func AdminUpdateUser(c *gin.Context) {
 		return
 	}
 
-	var userInput services.UserInput
+	var userInput models.FullUserInput
 	if err := c.ShouldBindJSON(&userInput); err != nil {
 		log.Printf("Error binding JSON: %v, Body: %v", err, c.Request.Body)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})

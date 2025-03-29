@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"auth-api/internal/errors"
+	"auth-api/internal/models"
 	"auth-api/internal/repositories"
 	"auth-api/internal/services"
 	"auth-api/internal/utils"
@@ -16,11 +17,11 @@ import (
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param user body services.LoginInput false "Login Input"
-// @Success 200 {string} string "successfully logged in"
+// @Param user body models.LoginInput false "Login Input"
+// @Success 200
 // @Router /api/auth/login [post]
 func Login(c *gin.Context) {
-	var loginInput services.LoginInput
+	var loginInput models.LoginInput
 
 	if err := c.ShouldBindJSON(&loginInput); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
@@ -61,7 +62,13 @@ func Login(c *gin.Context) {
 
 	repositories.IncreaseLoginCount()
 
-	c.JSON(http.StatusOK, session)
+	c.SetCookie("refresh_token", session.RefreshToken, int(session.RefreshExpiresAt.Unix()), "/", "", true, true)
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":      "Successfully logged in!",
+		"access_token": session.AccessToken,
+		"expires_at":   session.AccessExpiresAt,
+	})
 }
 
 // @Summary Logout
@@ -69,31 +76,25 @@ func Login(c *gin.Context) {
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param authorization header string true "Bearer <token>"
 // @Success 200 {string} string "successfully logged out"
 // @Router /api/auth/logout [post]
 func Logout(c *gin.Context) {
-	token := utils.ExtractBearerToken(c.GetHeader("Authorization"))
-	if token == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+	// clear the cookies by setting them to expire immediately
+	c.SetCookie("access_token", "", -1, "/", "", false, true)
+	c.SetCookie("refresh_token", "", -1, "/", "", false, true)
+
+	token, err := c.Cookie("access_token")
+	if err != nil && err != http.ErrNoCookie {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read cookie"})
 		return
 	}
 
-	if err := services.Logout(token); err != nil {
-		switch e := err.(type) {
-		case *errors.UserError:
-			switch e.Type {
-			case errors.SessionNotFound:
-				c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired session"})
-			case errors.InvalidToken:
-				c.JSON(http.StatusBadRequest, gin.H{"error": "invalid token format"})
-			default:
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "logout failed"})
-			}
-		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+	// only attempt logout if we have a token
+	if token != "" {
+		if err := services.Logout(token); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to invalidate session"})
+			return
 		}
-		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "logged out"})
@@ -104,27 +105,21 @@ func Logout(c *gin.Context) {
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param user body services.UserInput true "User input data"
-// @Success 201 {object} models.User
+// @Param user body models.UserInput true "User input data"
+// @Success 201
 // @Router /api/auth/signup [post]
 func SignUp(c *gin.Context) {
-	var userInput services.UserInput
+	var userInput models.UserInput
 
 	if err := c.ShouldBindJSON(&userInput); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
 		return
 	}
 
-	// Sanitize inputs
+	// sanitise inputs
 	userInput.Email = strings.TrimSpace(userInput.Email)
-	userInput.PhoneNumber = strings.TrimSpace(userInput.PhoneNumber)
 
-	// Validate required fields
-	if userInput.Email == "" && userInput.PhoneNumber == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Email or phone number is required"})
-		return
-	}
-
+	// validate required fields
 	if !utils.IsValidPassword(userInput.Password) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Password does not meet security requirements"})
 		return
@@ -140,13 +135,37 @@ func SignUp(c *gin.Context) {
 			case errors.ValidationError:
 				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input data"})
 			default:
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user, please try again later"})
 			}
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error, please try again later"})
 		}
 		return
 	}
 
-	c.JSON(http.StatusCreated, user)
+	// send the verification email
+	verifEmail := models.VerifEmailInput{
+		UserID: user.ID.Hex(),
+	}
+
+	services.CreateVerifEmail(verifEmail)
+
+	user_return := models.UserCreateReturn{
+		Success: true,
+		Message: "User created successfully",
+	}
+
+	c.JSON(http.StatusCreated, user_return)
+}
+
+// @Summary Complete Sign up
+// @Description Finishes off the signup process after email verification succeeds + logs in the user
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param user body models.SetupUserInput true "Setup step 2 user input data"
+// @Success 201
+// @Router /api/auth/csignup [post]
+func FinishSignup(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{"error": "Not implemented"})
 }

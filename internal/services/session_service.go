@@ -3,9 +3,7 @@ package services
 import (
 	"auth-api/internal/models"
 	"auth-api/internal/repositories"
-	"crypto/rand"
-	"crypto/sha256"
-	"encoding/hex"
+	"auth-api/internal/utils"
 	"sync"
 	"time"
 
@@ -19,8 +17,7 @@ const (
 	accessTokenDuration  = 30 * time.Minute
 	refreshTokenDuration = 12 * time.Hour
 	maxSessionLifespan   = 7 * 24 * time.Hour // 7 days
-	tokenLength          = 32
-	maxSessionsPerUser   = 5 // Maximum concurrent sessions per user
+	maxSessionsPerUser   = 5                  // Maximum concurrent sessions per user
 	cacheCleanupInterval = 30 * time.Minute
 )
 
@@ -40,19 +37,6 @@ func init() {
 	limiter = rate.NewLimiter(rate.Every(time.Minute/10), 1)
 
 	go startCacheCleanup()
-}
-
-func generateSecureToken() (string, error) {
-	b := make([]byte, tokenLength)
-	if _, err := rand.Read(b); err != nil {
-		return "", err
-	}
-
-	hash := sha256.New()
-	hash.Write(b)
-	hash.Write([]byte(time.Now().String()))
-
-	return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
 func addToCache(session models.Session) {
@@ -150,12 +134,12 @@ func CreateSession(userID primitive.ObjectID) (models.Session, error) {
 		return models.Session{}, errors.NewMaxSessionsReachedError("maximum concurrent sessions reached", nil)
 	}
 
-	accessToken, err := generateSecureToken()
+	accessToken, err := utils.GenToken()
 	if err != nil {
 		return models.Session{}, err
 	}
 
-	refreshToken, err := generateSecureToken()
+	refreshToken, err := utils.GenToken()
 	if err != nil {
 		return models.Session{}, err
 	}
@@ -251,12 +235,12 @@ func RefreshAccessToken(refreshToken string) (models.Session, error) {
 	}
 
 	// Generate new tokens
-	newAccessToken, err := generateSecureToken()
+	newAccessToken, err := utils.GenToken()
 	if err != nil {
 		return models.Session{}, err
 	}
 
-	newRefreshToken, err := generateSecureToken()
+	newRefreshToken, err := utils.GenToken()
 	if err != nil {
 		return models.Session{}, err
 	}
@@ -326,4 +310,3 @@ func InvalidateSessionByToken(token string) error {
 
 	return errors.NewSessionNotFoundError("invalid or expired session", nil)
 }
-

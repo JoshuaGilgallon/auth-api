@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"auth-api/internal/models"
-	"auth-api/internal/utils"
 	"context"
 	"fmt"
 	"log"
@@ -77,10 +76,8 @@ func GetUserByEmail(email string) (models.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	hashed_email := utils.HashSHA(email)
-
 	var user models.User
-	filter := bson.M{"email_hash": hashed_email}
+	filter := bson.M{"email": email}
 	err := userCollection.FindOne(ctx, filter).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -97,10 +94,8 @@ func GetUserByPhoneNumber(phoneNumber string) (models.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	hashed_phone_number := utils.HashSHA(phoneNumber)
-
 	var user models.User
-	filter := bson.M{"phone_number_hash": hashed_phone_number}
+	filter := bson.M{"phone_number": phoneNumber}
 	err := userCollection.FindOne(ctx, filter).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -241,16 +236,11 @@ func SearchUsersByFields(criteria models.UserAdvancedSearchCriteria) ([]models.U
 	// Handle email search with both partial and hash matching
 	if criteria.Email != "" {
 		emailConditions := []bson.M{
-			// Match by partial email (for unencrypted emails)
 			{
 				"email": bson.M{
 					"$regex":   "(?i)" + regexp.QuoteMeta(criteria.Email),
 					"$options": "i",
 				},
-			},
-			// Match by email hash (for encrypted emails)
-			{
-				"email_hash": utils.HashSHA(criteria.Email),
 			},
 		}
 		orConditions = append(orConditions, bson.M{"$or": emailConditions})
@@ -264,10 +254,6 @@ func SearchUsersByFields(criteria models.UserAdvancedSearchCriteria) ([]models.U
 				"phone_number": bson.M{
 					"$regex": regexp.QuoteMeta(criteria.PhoneNumber),
 				},
-			},
-			// Match by phone hash (for encrypted numbers)
-			{
-				"phone_number_hash": utils.HashSHA(criteria.PhoneNumber),
 			},
 		}
 		orConditions = append(orConditions, bson.M{"$or": phoneConditions})
@@ -353,9 +339,6 @@ func SimpleSearchUsers(searchTerm string, skip int64, limit int64) ([]models.Use
 						"$options": "i",
 					},
 				},
-				{
-					"email_hash": utils.HashSHA(searchTerm),
-				},
 			},
 		},
 		// Phone number conditions
@@ -365,9 +348,6 @@ func SimpleSearchUsers(searchTerm string, skip int64, limit int64) ([]models.Use
 					"phone_number": bson.M{
 						"$regex": regexp.QuoteMeta(searchTerm),
 					},
-				},
-				{
-					"phone_number_hash": utils.HashSHA(searchTerm),
 				},
 			},
 		},
