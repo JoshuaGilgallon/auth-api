@@ -49,3 +49,12 @@ func GetIdFromCode(code string) (primitive.ObjectID, error) {
 
 	return id, nil
 }
+
+func InvalidateEmailToken(code string) error {
+	err := repositories.InvalidateEmailToken(code)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

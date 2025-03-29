@@ -57,6 +57,7 @@ RESEND_API_KEY=<your api key from resend>
 ROOT_ADMIN_USER=<admin_username_here>
 ROOT_ADMIN_PASSWORD=<admin_password_here>
 
+BASE_URL=<the base url of your front end, e.g. example.com>
 EMAIL_REDIRECT_BASE=<the base url for email redirects>
 ```
 

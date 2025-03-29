@@ -91,6 +91,13 @@ func VerifyEmail(code string) (bool, error) {
 		return false, errors.Wrap(err, "failed to find verification code")
 	}
 
+	// check if the code is expired
+	if time.Since(email.CreatedAt) > 30*time.Minute {
+		log.Printf("Verification code expired: %v", err)
+		InvalidateEmailToken(code)
+		return false, errors.Wrap(err, "verification code expired")
+	}
+
 	// update the user email verified status
 	user, err := GetUserByID(email.UserID.Hex())
 	if err != nil {
@@ -103,13 +110,6 @@ func VerifyEmail(code string) (bool, error) {
 	if err != nil {
 		log.Printf("Error updating user: %v", err)
 		return false, errors.Wrap(err, "failed to update user")
-	}
-
-	// delete the verification code from the database
-	_, err = emailCollection.DeleteOne(ctx, filter)
-	if err != nil {
-		log.Printf("Error deleting verification code: %v", err)
-		return false, errors.Wrap(err, "failed to delete verification code")
 	}
 
 	return true, nil
@@ -128,4 +128,18 @@ func GetIdFromCode(code string) (primitive.ObjectID, error) {
 	}
 
 	return email.UserID, nil
+}
+
+func InvalidateEmailToken(code string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{"code": code}
+	_, err := emailCollection.DeleteOne(ctx, filter)
+	if err != nil {
+		log.Printf("Error deleting verification code: %v", err)
+		return errors.Wrap(err, "failed to delete verification code")
+	}
+
+	return nil
 }

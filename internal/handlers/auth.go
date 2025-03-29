@@ -206,6 +206,14 @@ func FinishSignup(c *gin.Context) {
 		return
 	}
 
+	// delete the token from the database so it cant be used again
+	err = repositories.InvalidateEmailToken(userInput.Token)
+	if err != nil {
+		log.Printf("Error invalidating email token: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to invalidate email token"})
+		return
+	}
+
 	c.JSON(http.StatusCreated, gin.H{"message": "Signup completed successfully", "access": response.AccessToken})
 
 	c.SetCookie("refresh_token", response.RefreshToken, int(response.RefreshExpiresAt.Unix()), "/", "", true, true)
