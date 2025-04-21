@@ -5,6 +5,7 @@ import (
 	"auth-api/internal/models"
 	"auth-api/internal/repositories"
 	"auth-api/internal/utils"
+	"time"
 )
 
 func Login(input models.LoginInput) (models.Session, error) {
@@ -54,6 +55,34 @@ func CompleteSignup(input models.SetupUserInput) (models.Session, error) {
 	ID, err := GetIdFromCode(input.Token)
 	if err != nil {
 		return models.Session{}, errors.NewInvalidCredentialsError("Invalid Token. Please resend a verification email.", nil)
+	}
+
+	// Get the user by ID
+	user, err := repositories.GetUserByID(ID.Hex())
+	if err != nil {
+		return models.Session{}, errors.NewFailedToCreateError("Failed to retrieve user information.", nil)
+	}
+
+	// Update user with provided information
+	user.FirstName = input.FirstName
+	user.LastName = input.LastName
+
+	// Parse and set birth date
+	birthDate, err := time.Parse("2006-01-02", input.BirthDate)
+	if err != nil {
+		return models.Session{}, errors.NewValidationError("Invalid birth date format.", nil)
+	}
+	user.BirthDate = birthDate
+
+	// Set email as verified and status as active
+	user.EmailVerified = true
+	user.Status = models.StatusActive
+	user.UpdatedAt = time.Now()
+
+	// Save the updated user
+	_, err = repositories.SaveUser(user)
+	if err != nil {
+		return models.Session{}, errors.NewFailedToCreateError("Failed to update user information.", nil)
 	}
 
 	// Create session

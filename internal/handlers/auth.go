@@ -197,7 +197,7 @@ func FinishSignup(c *gin.Context) {
 		return
 	}
 
-	response, err := services.CompleteSignup(userInput)
+	response_session, err := services.CompleteSignup(userInput)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to complete signup"})
 		log.Printf("Error completing signup: %v", err)
@@ -212,7 +212,22 @@ func FinishSignup(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "Signup completed successfully", "access": response.AccessToken})
+	// // create a stripe customer for the user
+	// stripe.Key = os.Getenv("STRIPE_API_KEY")
 
-	c.SetCookie("refresh_token", response.RefreshToken, int(response.RefreshExpiresAt.Unix()), "/", "", true, true)
+	// params := &stripe.CustomerParams{
+	// 	Email: stripe.String(userInput.Email),
+	// 	Name:  stripe.String(response.FirstName + " " + response.LastName),
+	// }
+
+	// _, err = customer.New(params)
+	// if err != nil {
+	// 	log.Printf("Error creating Stripe customer: %v", err)
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create Stripe customer, please try again later."})
+	// 	return
+	// }
+
+	c.JSON(http.StatusCreated, gin.H{"message": "Signup completed successfully", "access": response_session.AccessToken})
+
+	c.SetCookie("refresh_token", response_session.RefreshToken, int(response_session.RefreshExpiresAt.Unix()), "/", "", true, true)
 }
